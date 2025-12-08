@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 
 User = get_user_model()
@@ -42,3 +42,38 @@ class SignupSerializer(serializers.ModelSerializer):
         # 최종적으로 DB에 반영
         user.save()
         return user
+    
+
+class LoginSirializer(serializers.Serializer):
+    """
+    로그인 요청으로부터 들어오는 username / password를 검증하고,
+    django의 authenticate() 를 호출하여 유효한 사용자 여부를 확인하는 serializer
+    """
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attributes):
+        """
+        전체 필드 검증 메서드.
+        is_valid 호출 시:
+            1. 각 필드 기본 검사
+            2. 필드 레벨 유효성 검사
+            3. 마지막으로 이 메서드가 실행됨
+        """
+        username = attributes.get("username")
+        password = attributes.get("password")
+
+        # 만약 둘 중 하나라도 비어있다면 에러
+        if not username or not password:
+            raise serializers.ValidationError("username과 password는 모두 필수 입력 사항입니다.")
+
+        # username과 password가 일치하다면 로그인된 사용자 객체를 반환하는 함수
+        user = authenticate(username=username, password=password)
+
+        # 인증 실패
+        if not user:
+            raise serializers.ValidationError("아이디 또는 비밀번호가 일치하지 않습니다.")
+        
+        # 이후 view에서 꺼내서 사용할 수 있도록 user를 넣어두기
+        attributes["user"] = user
+        return attributes
