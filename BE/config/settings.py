@@ -132,11 +132,16 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 모든 api에 접근을 허용하는 설정(개발 단계에서만 사용)
+
+
 REST_FRAMEWORK = {
+    # 개발 단계에서 csrf 토큰 사용을 생략함(배포 단계에서 반드시 삭제)
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    # 개발 단계에서 모든 경로에서의 api 호출을 허용함(배포 단계에서 반드시 삭제)
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
 }
-
 AUTH_USER_MODEL = "accounts.User"

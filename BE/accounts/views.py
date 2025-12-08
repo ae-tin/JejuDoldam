@@ -4,8 +4,6 @@ from rest_framework import status
 from .serializers import SignupSerializer, LoginSirializer
 from django.contrib.auth import login
 
-# Create your views here.
-
 class SignupAPIView(APIView):
     """
     POST /auth/signup/
