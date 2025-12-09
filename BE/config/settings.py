@@ -15,6 +15,8 @@ from pathlib import Path
 import os
 import environ
 
+from datetime import timedelta
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -148,3 +150,9 @@ REST_FRAMEWORK = {
     ],
 }
 AUTH_USER_MODEL = "accounts.User"
+
+# JWT 만료시간 설정
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30), # access 토큰 지속시간 30분으로 설정
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
