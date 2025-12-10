@@ -15,6 +15,8 @@ from pathlib import Path
 import os
 import environ
 
+from datetime import timedelta
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -41,6 +43,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "rest_framework",
     "accounts",
+    "posts",
+    "routes",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -135,13 +139,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 REST_FRAMEWORK = {
-    # 개발 단계에서 csrf 토큰 사용을 생략함(배포 단계에서 반드시 삭제)
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ],
     # 개발 단계에서 모든 경로에서의 api 호출을 허용함(배포 단계에서 반드시 삭제)
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # JWT 토큰 기반 로그인
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
 }
 AUTH_USER_MODEL = "accounts.User"
+
+# JWT 만료시간 설정
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30), # access 토큰 지속시간 30분으로 설정
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
