@@ -77,3 +77,13 @@ class LoginSirializer(serializers.Serializer):
         # 이후 view에서 꺼내서 사용할 수 있도록 user를 넣어두기
         attributes["user"] = user
         return attributes
+    
+
+class MeSerializer(serializers.ModelSerializer):
+    """
+    현재 로그인한 사용자 정보를 조회하는 Serializer
+    """
+    class Meta:
+        model = User
+        fields = ["id", "username", ]
+        read_only_fields = fields
