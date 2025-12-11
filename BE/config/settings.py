@@ -155,8 +155,8 @@ AUTH_USER_MODEL = "accounts.User"
 
 # JWT 만료시간 설정
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30), # access 토큰 지속시간 30분으로 설정
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # access 토큰 만료기간 5분
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=8),  # refresh 토큰 만료기간 8시간
 }
 
 

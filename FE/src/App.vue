@@ -53,6 +53,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -64,6 +65,25 @@ const onLogout = () => {
   alert('로그아웃 되었습니다.')
   router.push('/login')
 }
+
+
+// 현재 사용자가 로컬 스토리지에 들고있는 토큰이 만료되어있는건지 유효한건지 항상 검사
+onMounted(async () => {
+  // 애초에 토큰이 없다면 검사하지 않음
+  if (!auth.isAuthenticated) return
+
+  try {
+    // 서버에 현재 로그인 유저 정보 요청
+    // 토큰이 유효하지 않다면 401 -> 인터셉터가 refresh 시도하고 실패했다면 로그아웃 실행
+    await api.get('/auth/me/')
+  } catch (error) {
+    // 두 토큰 모두 만료된 경우
+    // 인터셉터에서 refresh 실패 후 에러를 던지면 여기서 받음
+    // 로그아웃 상태를 페이지에 반영
+    auth.logout()
+  }
+})
+
 </script>
 
 <style scoped>
