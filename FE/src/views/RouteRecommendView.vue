@@ -36,35 +36,19 @@
         <label>여행 스타일</label>
         <div class="checkbox-group">
           <label>
-            <input
-              type="checkbox"
-              value="HEALING"
-              v-model="form.themes"
-            />
+            <input type="checkbox" value="HEALING" v-model="form.themes" />
             힐링
           </label>
           <label>
-            <input
-              type="checkbox"
-              value="CAFE"
-              v-model="form.themes"
-            />
+            <input type="checkbox" value="CAFE" v-model="form.themes" />
             카페
           </label>
           <label>
-            <input
-              type="checkbox"
-              value="FOOD"
-              v-model="form.themes"
-            />
+            <input type="checkbox" value="FOOD" v-model="form.themes" />
             맛집
           </label>
           <label>
-            <input
-              type="checkbox"
-              value="ACTIVITY"
-              v-model="form.themes"
-            />
+            <input type="checkbox" value="ACTIVITY" v-model="form.themes" />
             액티비티
           </label>
         </div>
@@ -81,13 +65,9 @@
     <section v-if="results.length" class="results">
       <h3>추천된 루트 목록 (더미)</h3>
 
-      <div
-        v-for="route in results"
-        :key="route.id"
-        class="route-card"
-      >
+      <div v-for="route in results" :key="route.id" class="route-card">
         <h4>{{ route.title }}</h4>
-        <p>{{ route.summary }}</p>
+        <p>{{ route.description }}</p>
         <p>일수: {{ route.days }}일</p>
         <ul>
           <li v-for="(place, idx) in route.places" :key="idx">
@@ -95,10 +75,17 @@
           </li>
         </ul>
 
-        <!-- 나중에 여기서 "이 루트 저장하기" 버튼으로 BE /routes/save 호출 -->
-        <button type="button">
-          이 루트 저장하기 (TODO)
-        </button>
+        <div class="card-actions">
+          <!-- 나중에 '상세보기/편집' 버튼도 추가 가능 -->
+          <button type="button">
+            이 루트로 편집하기 (TODO)
+          </button>
+
+          <!-- ⭐ 지금 당장 사용할 '확정 저장' 버튼 -->
+          <button type="button" :disabled="savingId === route.id" @click="handleConfirm(route)">
+            {{ savingId === route.id ? '저장 중...' : '이 루트 확정해서 저장' }}
+          </button>
+        </div>
       </div>
     </section>
 
@@ -121,6 +108,9 @@ const form = reactive({
 
 const loading = ref(false)
 const results = ref([])
+
+// 확정 저장 중인 route id(버튼 disable)
+const savingId = ref(null)
 
 const handleSubmit = async () => {
   loading.value = true
@@ -146,6 +136,69 @@ const handleSubmit = async () => {
     alert('추천 생성 중 오류가 발생했습니다.')
   } finally {
     loading.value = false
+  }
+}
+
+// 추천으로 받은 route 중 하나를 확정 저장하는 함수
+const handleConfirm = async (route) => {
+  if (!confirm('이 루트를 확정해서 저장할까요?')) {
+    return
+  }
+
+  savingId.value = route.id
+
+  try {
+    // 1) 추천 응답(route)을 confirm API 요청 형태로 변환
+    const confirmPayload = mapRouteToConfirmPayload(route)
+
+    // 2) 백엔드 확정 API 호출
+    const { data } = await api.post('/routes/confirm/', confirmPayload)
+
+    // 3) 일단은 알림만 + 콘솔 확인
+    console.log('확정 저장 결과:', data)
+    alert('루트가 저장되었습니다! (나중에 마이페이지에서 확인 가능하게 만들자)')
+  } catch (err) {
+    console.error(err)
+    alert('루트 저장 중 오류가 발생했습니다.')
+  } finally {
+    savingId.value = null
+  }
+}
+
+// 추천 route -> confirm API 요청 형태로 변환하는 헬퍼 함수
+function mapRouteToConfirmPayload(route) {
+  // 백엔드의 confirm API가 기대하는 데이터 구성으로 현재 데이터를 변환함
+  // day별로 묶기 위한 임시 객체
+  const dayMap = {}
+
+  for (const place of route.places) {
+    const day = place.day
+    if (!dayMap[day]) {
+      dayMap[day] = []
+    }
+
+    dayMap[day].push({
+      order: place.order ?? dayMap[day].length + 1,
+      name: place.name,
+      address: place.address ?? '',
+      latitude: place.latitude ?? null,
+      longitude: place.longitude ?? null,
+      memo: place.memo ?? '',
+    })
+  }
+
+  // day 숫자 오름차순으로 정렬해서 배열로 변환
+  const days = Object.entries(dayMap)
+    .map(([day, places]) => ({
+      day: Number(day),
+      places: places.sort((a, b) => a.order - b.order),
+    }))
+    .sort((a, b) => a.day - b.day)
+
+  return {
+    title: route.title,
+    description: route.description ?? '',
+    days,
   }
 }
 </script>
@@ -191,5 +244,11 @@ const handleSubmit = async () => {
 .no-results {
   margin-top: 16px;
   color: #666;
+}
+
+.card-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
 }
 </style>
