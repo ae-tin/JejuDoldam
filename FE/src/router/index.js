@@ -1,4 +1,5 @@
 import LoginView from '@/views/LoginView.vue'
+import MyPageView from '@/views/MyPageView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -8,8 +9,14 @@ const router = createRouter({
     {
       path: "/login",
       name: "login",
-      component: LoginView
+      component: LoginView,
     },
+    {
+      path: "/mypage",
+      name: "mypage",
+      component: MyPageView,
+      meta: { requiresAuth: true },
+    }
   ],
 })
 
