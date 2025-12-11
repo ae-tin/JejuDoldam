@@ -1,10 +1,20 @@
+from django.db import transaction, IntegrityError
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from . models import Route, RouteDay, RoutePlace
-from .serializers import RouteSerializer, RouteDetailSerializer, RouteDaySerializer, RoutePlaceSerializer
+from .serializers import (
+    RouteSerializer,
+    RouteDetailSerializer,
+    RouteDaySerializer,
+    RoutePlaceSerializer,
+    RouteRecommendInputSerializer,
+    RouteDayInputSerializer,
+    RoutePlaceInputSerializer,
+    RouteConfirmInputSerializer,
+)
 
 
 # Create your views here.
@@ -243,4 +253,150 @@ class RoutePlaceDetailAPIView(APIView):
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         place.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
+
+class RouteRecommendAPIView(APIView):
+    """
+    POST /routes/recommend/
+    -> 여행 조건을 받아서 추천 루트 리스트를 반환
+    (지금은 하드코딩된 더미를 사용, 나중에 여기서 AI 로직을 호출할 예정)
+    """
+
+    # 로그인한 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # 입력값 검증
+        serializer = RouteRecommendInputSerializer(data=request.data)
+        # 유효성 검사
+        serializer.is_valid(raise_exception=True)
+        # 유효성 검사를 통과한 깨끗한 데이터를 변수에 할당
+        data = serializer.validated_data
+
+        # AI 추천 대신 더미 데이터 생성
+        dummy_routes = self.create_dummy_routes(data)
+        return Response(dummy_routes)
+    
+
+    def create_dummy_routes(self, data: dict) -> list[dict]:
+        """
+        나중에 ai 로직 구현이 완료되면 여기서 호출함
+        지금은 더미 데이터를 하드코딩으로 생성하여 반환
+        """
+        days = data["days"]
+        return [
+            {
+                "id": 1,
+                "title": f"동부 힐링 루트 ({days}일)",
+                "description": "성산일출봉 · 우도 · 섭지코지 중심 힐링 코스",
+                "days": days,
+                "places": [
+                    {"day": 1, "order": 1, "name": "성산일출봉"},
+                    {"day": 1, "order": 2, "name": "섭지코지"},
+                    {"day": 2, "order": 1, "name": "우도"},
+                ],
+            },
+            {
+                "id": 2,
+                "title": f"서부 카페투어 루트 ({days}일)",
+                "description": "협재·애월 카페 위주의 여유로운 코스",
+                "days": days,
+                "places": [
+                    {"day": 1, "order": 1, "name": "협재해수욕장"},
+                    {"day": 1, "order": 2, "name": "애월 카페 거리"},
+                ],
+            },
+            {
+                "id": 3,
+                "title": f"남부 맛집 루트 ({days}일)",
+                "description": "서귀포 중심 맛집 & 관광 코스",
+                "days": days,
+                "places": [
+                    {"day": 1, "order": 1, "name": "서귀포 매일 올레 시장"},
+                    {"day": 1, "order": 2, "name": "정방폭포"},
+                ],
+            },
+        ]
+    
+
+
+class RouteConfirmAPIView(APIView):
+    """
+    POST /api/v1/routes/confirm/
+    -> 추천 결과(혹은 편집 완료된 루트)를 한번에 DB에 저장
+
+    요청 예시:
+    {
+      "title": "3박 4일 제주 힐링 여행",
+      "description": "동부 위주 힐링 코스",
+      "days": [
+        {
+          "day": 1,
+          "places": [
+            {"order": 1, "name": "성산일출봉", ...},
+            {"order": 2, "name": "섭지코지", ...}
+          ]
+        },
+        ...
+      ]
+    }
+    하나의 액션으로 Route 1개, RouteDay N개, RoutePlace M개를 전부 생성해야 함
+    중간에 하나라도 실패하면 전체를 롤백해야 함
+    """
+
+    # 로그인한 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic  # 여러번 DB 작업이 일어나도 전부 성공하면 commit 처리, 중간에 하나라도 실패하면 rollback
+    def post(self, request):
+        # 요청 JSON 구조/타입 검증
+        serializer = RouteConfirmInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # 직렬화 완료되고, 유효성검사가 완료된 깨끗한 데이터만 변수에 할당
+        data = serializer.validated_data
+
+        # 트랜잭션 내부에서 Route + Day + Place 한번에 생성
+        try:
+            route = self.create_route_days_places(request.user, data)
+        except IntegrityError:
+            # DB unique 관련 에러 발생 시
+            return Response({"detail": "중복된 day 또는 장소 또는 순서(order)가 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 생성된 Route 전체 구조를 상세 serializer로 응답
+        output_serializer = RouteDetailSerializer(route)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def create_route_days_places(slef, user, data: dict) -> Route:
+        """
+        validated_data를 바탕으로
+        Route 1개
+        RouteDay N개
+        RoutePlace M개
+        를 생성하고 최종 Route 인스턴스를 반환
+        """
+        # Route 생성
+        route = Route.objects.create(
+            user=user,
+            title=data["title"],
+            description=data.get("description", ""),
+        )
+
+        # 각 day 데이터에 대해 RouteDay + RoutePlace 생성
+        # data["days"]를 순회
+        # day_data에는 일차(day), 장소(places)에 대한 정보가 담겨있음
+        for day_data in data["days"]:
+            # 일차 정보를 생성
+            route_day = RouteDay.objects.create(route=route, day=day_data["day"])
+            # 생성된 일차 정보의 장소를 순회하며 일차와 장소를 매핑
+            for place_data in day_data["places"]:
+                RoutePlace.objects.create(
+                    route_day = route_day,
+                    order = place_data["order"],
+                    name=place_data["name"],
+                    address=place_data.get("address", ""),  # 선택 입력 사항은 .get으로 처리
+                    latitude=place_data.get("latitude"),
+                    longitude=place_data.get("longitude"),
+                    memo=place_data.get("memo", ""),
+                )
+        # 완성된 Route 객체를 반환
+        return route
