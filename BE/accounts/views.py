@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SignupSerializer, LoginSirializer
+from .serializers import SignupSerializer, LoginSirializer, MeSerializer
 from django.contrib.auth import login
+from rest_framework.permissions import IsAuthenticated
+
 
 class SignupAPIView(APIView):
     """
@@ -57,3 +59,15 @@ class LoginAPIView(APIView):
             )
         # 유효성 검사 실패 시 에러 응답
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class MeAPIView(APIView):
+    """
+    GET /auth/me/ -> JWT로 로그인된 사용자의 정보를 반환
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = MeSerializer(request.user)
+        return Response(serializer.data)
