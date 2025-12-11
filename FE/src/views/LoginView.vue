@@ -34,10 +34,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import api from '@/api/client';
 
 const router = useRouter();
+const route = useRoute();
 
 const username = ref('');
 const password = ref('');
@@ -63,8 +64,14 @@ const handleSubmit = async () => {
 
     alert(`로그인 성공! 안녕, ${username.value}`);
 
-    // TODO: 나중에 루트 목록 페이지 만들면 여기로 이동
-    // router.push('/routes');
+    // 로그인 하기 전에 요청했던 페이지가 있다면 해당 페이지로, 없다면 메인 페이지로 이동
+    const nextPath = route.query.next
+    if (typeof nextPath === 'string') {
+      router.push(nextPath)
+    } else {
+      router.push({name: 'home'})
+    }
+
   } catch (err) {
     console.error(err);
     error.value = '아이디 또는 비밀번호를 다시 확인해주세요.';
