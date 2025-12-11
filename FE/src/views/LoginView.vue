@@ -36,9 +36,11 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import api from '@/api/client';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const route = useRoute();
+const auth = useAuthStore();
 
 const username = ref('');
 const password = ref('');
@@ -57,9 +59,9 @@ const handleSubmit = async () => {
     });
 
     // access / refresh 토큰 저장
-    // TODO: 로컬 스토리지에 저장된 토큰을 httponly 저장 구조로 설계
-    localStorage.setItem('access', data.access);
-    localStorage.setItem('refresh', data.refresh);
+    // TODO: 로컬 스토리지에 저장된 토큰을 httponly 저장 구조로 설계(맨 나중에 고려 지금 프로젝트 크기면 굳이 안해도됨)
+    // finia에 토큰 저장
+    auth.login(data.access, data.refresh)
 
 
     alert(`로그인 성공! 안녕, ${username.value}`);

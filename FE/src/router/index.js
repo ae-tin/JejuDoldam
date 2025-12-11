@@ -3,6 +3,7 @@ import MyPageView from '@/views/MyPageView.vue'
 import HomeView from '@/views/HomeView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import RouteRecommendView from '@/views/RouteRecommendView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,22 +34,19 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = !!localStorage.getItem('access')
+  const auth = useAuthStore()
+  const isLoggedIn = auth.isAuthenticated
 
-  // 1) 보호된 페이지인데 로그인 안 됨 → 로그인 페이지로
+  // 1) 로그인이 필요한데 안 되어 있으면 → 로그인 페이지로 (next 파라미터 포함)
   if (to.meta.requiresAuth && !isLoggedIn) {
-    return next({
-      name: 'login',
-      query: { next: to.fullPath }, // 나중에 로그인 후 복귀할 때 쓸 수 있음
-    })
+    return next({ name: 'login', query: { next: to.fullPath } })
   }
 
-  // 2) 로그인 페이지로 가려는데 이미 로그인한 상태 → 마이페이지로
+  // 2) 이미 로그인 상태인데 /login 으로 가려 하면 → 홈으로
   if (to.name === 'login' && isLoggedIn) {
-    return next({ name: 'mypage' })
+    return next({ name: 'home' })
   }
 
-  // 3) 그 외엔 그냥 진행
   return next()
 })
 
