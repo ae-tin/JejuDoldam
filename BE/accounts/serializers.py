@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
+from datetime import date
 
 User = get_user_model()
 
@@ -14,7 +15,17 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "password",]
+        fields = [
+            "username",
+            "password",
+            "birth_date",
+            "gender",
+            "marriage_status",
+            "job",
+            "income",
+            "travel_num",
+            "residence",
+        ]
 
     def validate_username(self, value):
         """
@@ -26,6 +37,22 @@ class SignupSerializer(serializers.ModelSerializer):
         # 아니라면 사용자가 입력한 username 을 반환함
         return value
     
+    def validate_birth_date(self, value):
+        """
+        생년월일의 유효성 검사 메서드
+        """
+        if value > date.today():
+            raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
+        return value
+    
+    def validate_travel_num(self, value):
+        # 허용값은 우선 임의로 설정
+        # TODO 여행 빈도값 확정 후 재작성 필요
+        allowed = {1,2,3,4,5,6,7,8,9,10,11,12,15,20,25,30}
+        if value not in allowed:
+            raise serializers.ValidationError("연간 여행 빈도 값이 허용 범위가 아닙니다.")
+        return value
+
     def create(self, validated_data):
         """
         serailizer.save() 호출 시 실행되는 메서드
@@ -33,7 +60,7 @@ class SignupSerializer(serializers.ModelSerializer):
         """
         password = validated_data.pop("password")
 
-        # username, nickname만 삽입
+        # validated_data에 들어있는 모든 프로필 필드까지 포함하여 User 생성
         user = User(**validated_data)
 
         # set_password -> 해싱된 비밀번호 자동 생성
