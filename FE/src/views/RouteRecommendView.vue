@@ -98,6 +98,9 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import api from '@/api/client'   // ✅ 공통 axios 인스턴스
+import { useRoute, useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const form = reactive({
   days: 3,
@@ -156,7 +159,8 @@ const handleConfirm = async (route) => {
 
     // 3) 일단은 알림만 + 콘솔 확인
     console.log('확정 저장 결과:', data)
-    alert('루트가 저장되었습니다! (나중에 마이페이지에서 확인 가능하게 만들자)')
+    alert('루트가 저장되었습니다!')
+    router.push({ name: 'route-detail', params: { routeId: data.id }})
   } catch (err) {
     console.error(err)
     alert('루트 저장 중 오류가 발생했습니다.')

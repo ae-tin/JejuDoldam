@@ -5,6 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import RouteRecommendView from '@/views/RouteRecommendView.vue'
 import { useAuthStore } from '@/stores/auth'
 import SignupView from '@/views/SignupView.vue'
+import RouteDetailView from '@/views/RouteDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,6 +36,12 @@ const router = createRouter({
       path:'/signup',
       name: 'signup',
       component: SignupView,
+    },
+    {
+      path: "/routes/:routeId",
+      name: "route-detail",
+      component: RouteDetailView,
+      meta: { requiresAuth: true },
     },
   ],
 })
