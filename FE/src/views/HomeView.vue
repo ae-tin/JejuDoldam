@@ -23,7 +23,7 @@
 
       <hr />
 
-      <h3>내가 만든 루트</h3>
+      <h3>최근 저장한 루트</h3>
 
       <p v-if="loading">불러오는 중...</p>
       <p v-else-if="error" class="error">{{ error }}</p>
@@ -34,6 +34,7 @@
           <div class="desc">{{ r.description || '설명 없음' }}</div>
           <div class="meta">#{{ r.id }} · {{ r.created_at.slice(0, 10) }}</div>
         </li>
+        <RouterLink to="/mypage?tab=routes" class="btn">저장한 경로 더보기</RouterLink>
       </ul>
 
       <p v-else>아직 저장된 루트가 없습니다. 추천을 받아보세요!</p>
