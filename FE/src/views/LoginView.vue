@@ -29,6 +29,10 @@
 
       <p v-if="error" class="error">{{ error }}</p>
     </form>
+  <p style="margin-top:12px;">
+    아직 계정이 없나요?
+    <RouterLink to="/signup">회원가입</RouterLink>
+  </p>
   </div>
 </template>
 

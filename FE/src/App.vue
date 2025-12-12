@@ -54,6 +54,7 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { onMounted } from 'vue'
+import api from '@/api/client'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -77,10 +78,7 @@ onMounted(async () => {
     // 토큰이 유효하지 않다면 401 -> 인터셉터가 refresh 시도하고 실패했다면 로그아웃 실행
     await api.get('/auth/me/')
   } catch (error) {
-    // 두 토큰 모두 만료된 경우
-    // 인터셉터에서 refresh 실패 후 에러를 던지면 여기서 받음
-    // 로그아웃 상태를 페이지에 반영
-    auth.logout()
+    // 두 토큰 모두 만료된 경우 api 로직에서 알아서 로그아웃됨
   }
 })
 

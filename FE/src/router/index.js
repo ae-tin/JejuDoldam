@@ -4,6 +4,7 @@ import HomeView from '@/views/HomeView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import RouteRecommendView from '@/views/RouteRecommendView.vue'
 import { useAuthStore } from '@/stores/auth'
+import SignupView from '@/views/SignupView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,6 +31,11 @@ const router = createRouter({
       component: RouteRecommendView,
       meta: { requiresAuth: true },
     },
+    {
+      path:'/signup',
+      name: 'signup',
+      component: SignupView,
+    },
   ],
 })
 
@@ -42,8 +48,8 @@ router.beforeEach((to, from, next) => {
     return next({ name: 'login', query: { next: to.fullPath } })
   }
 
-  // 2) 이미 로그인 상태인데 /login 으로 가려 하면 → 홈으로
-  if (to.name === 'login' && isLoggedIn) {
+  // 2) 이미 로그인 상태인데 signup/login 으로 가려 하면 → 홈으로
+  if ((to.name === 'login' || to.name === 'signup') && isLoggedIn) {
     return next({ name: 'home' })
   }
 
