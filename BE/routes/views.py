@@ -232,7 +232,7 @@ class RoutePlaceDetailAPIView(APIView):
     def patch(self, request, place_pk):
         place = self.get_object(request, place_pk)
         if place is None:
-            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = RoutePlaceSerializer(place, data=request.data, partial=True)
 
@@ -250,7 +250,7 @@ class RoutePlaceDetailAPIView(APIView):
     def delete(self, request, place_pk):
         place = self.get_object(request, place_pk)
         if place is None:
-            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         place.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
