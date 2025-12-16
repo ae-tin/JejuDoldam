@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/v1',
+  baseURL: 'http://127.0.0.1:80/api/v1',
 });
 
 // 매 요청마다 access 토큰을 Authorization 헤더에 실어줌
@@ -37,7 +37,7 @@ api.interceptors.response.use(
       try {
         // refresh 토큰으로 access 재발급 요쳥
         const { data } = await axios.post(
-          'http://127.0.0.1:8000/api/v1/auth/jwt/refresh/',
+          'http://127.0.0.1:80/api/v1/auth/jwt/refresh/',
           { refresh }
         )
         // 다시 발급받은 access 토큰으로 로그인

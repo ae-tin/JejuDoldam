@@ -6,13 +6,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Route, RouteDay, RoutePlace
-from ..accounts.models import User
+from .utils import preprocessing_input_data
+from accounts.models import User
 from .serializers import (
     RouteSerializer,
     RouteDetailSerializer,
     RouteDaySerializer,
     RoutePlaceSerializer,
-    RouteRecommendInputSerializer,
+    RouteRecommendInputSerializer2,
     RouteDayInputSerializer,
     RoutePlaceInputSerializer,
     RouteConfirmInputSerializer,
@@ -286,13 +287,14 @@ class RouteRecommendAPIView(APIView):
     def post(self, request):
         
         # 입력값 검증
-        serializer = RouteRecommendInputSerializer(data=request.data)
+        serializer = RouteRecommendInputSerializer2(data=request.data)
         # 유효성 검사
         serializer.is_valid(raise_exception=True)
         # 유효성 검사를 통과한 깨끗한 데이터를 변수에 할당
         data = serializer.validated_data
+        
         # 유저 DB 정보 로드
-        user_data = get_object_or_404(User, user=request.user)
+        user_data = get_object_or_404(User, username=request.user)
         user_info = {
             "GENDER": user_data.gender, # pass
             "AGE_GRP": user_data.birth_date, # calculate in AI API
@@ -302,13 +304,16 @@ class RouteRecommendAPIView(APIView):
             "TRAVEL_NUM": user_data.travel_num, # pass
             "TRAVEL_STATUS_RESIDENCE": user_data.residence, # pass
         }
-        print(user_info)
+        
         ai_input_data = {
             **user_info,
             **data,
         }
+        ai_input_data = preprocessing_input_data(ai_input_data)
 
-        AI_SERVER_URL = "http://127.0.0.1:8001/predict"
+        print(ai_input_data)
+
+        AI_SERVER_URL = "http://127.0.0.1:8001/route_rec_ai"
         ai_response = requests.post(
             AI_SERVER_URL,
             json=ai_input_data,
@@ -317,7 +322,9 @@ class RouteRecommendAPIView(APIView):
 
         ai_result = ai_response.json()
         # AI 추천 대신 더미 데이터 생성
-        
+        print('*'*30,"성공",'*'*30)
+        print(ai_result["result"][0])
+        print('*'*30,"성공",'*'*30)
         dummy_routes = self.create_dummy_routes(data)
         return Response(dummy_routes)
     
