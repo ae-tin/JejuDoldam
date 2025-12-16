@@ -1,10 +1,12 @@
+import requests
 from django.db import transaction, IntegrityError
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from . models import Route, RouteDay, RoutePlace
+from .models import Route, RouteDay, RoutePlace
+from ..accounts.models import User
 from .serializers import (
     RouteSerializer,
     RouteDetailSerializer,
@@ -260,20 +262,62 @@ class RouteRecommendAPIView(APIView):
     POST /routes/recommend/
     -> 여행 조건을 받아서 추천 루트 리스트를 반환
     (지금은 하드코딩된 더미를 사용, 나중에 여기서 AI 로직을 호출할 예정)
-    """
 
+    example_user = {
+        "GENDER": "남",
+        "AGE_GRP": "30",
+        "MARR_STTS": "1",
+        "JOB_NM": "3",
+        "INCOME": 4,
+        "TRAVEL_STYL_1": "2",
+        "TRAVEL_STATUS_RESIDENCE": "서울특별자치도",
+        "TRAVEL_STATUS_ACCOMPANY": "2인 여행(가족 외)",
+        "TRAVEL_MOTIVE_1": "7",
+        "TRAVEL_NUM": 3,
+        "TRAVEL_COMPANIONS_NUM": 1,
+        "MONTH": "8",
+        "SEASON": "summer",
+        "HOW_LONG": 3,
+    }
+    """
     # 로그인한 사용자만 접근 가능
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        
         # 입력값 검증
         serializer = RouteRecommendInputSerializer(data=request.data)
         # 유효성 검사
         serializer.is_valid(raise_exception=True)
         # 유효성 검사를 통과한 깨끗한 데이터를 변수에 할당
         data = serializer.validated_data
+        # 유저 DB 정보 로드
+        user_data = get_object_or_404(User, user=request.user)
+        user_info = {
+            "GENDER": user_data.gender, # pass
+            "AGE_GRP": user_data.birth_date, # calculate in AI API
+            "MARR_STTS": user_data.marriage_status, # pass
+            "JOB_NM": user_data.job, # pass
+            "INCOME": user_data.income, # pass
+            "TRAVEL_NUM": user_data.travel_num, # pass
+            "TRAVEL_STATUS_RESIDENCE": user_data.residence, # pass
+        }
+        print(user_info)
+        ai_input_data = {
+            **user_info,
+            **data,
+        }
 
+        AI_SERVER_URL = "http://127.0.0.1:8001/predict"
+        ai_response = requests.post(
+            AI_SERVER_URL,
+            json=ai_input_data,
+            timeout=5
+        )
+
+        ai_result = ai_response.json()
         # AI 추천 대신 더미 데이터 생성
+        
         dummy_routes = self.create_dummy_routes(data)
         return Response(dummy_routes)
     
