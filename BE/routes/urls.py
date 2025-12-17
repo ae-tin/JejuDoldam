@@ -21,4 +21,7 @@ urlpatterns = [
     
     # 추천/편집 결과 확정
     path("confirm/", views.RouteConfirmAPIView.as_view()),
+
+    # 카카오맵 장소 검색
+    path("search/", views.KakaoPlaceSearchAPIView.as_view()),
 ]

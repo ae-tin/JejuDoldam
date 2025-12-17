@@ -1,4 +1,6 @@
 from django.db import transaction, IntegrityError
+from django.conf import settings
+import requests
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
@@ -291,9 +293,21 @@ class RouteRecommendAPIView(APIView):
                 "description": "성산일출봉 · 우도 · 섭지코지 중심 힐링 코스",
                 "days": days,
                 "places": [
-                    {"day": 1, "order": 1, "name": "성산일출봉"},
-                    {"day": 1, "order": 2, "name": "섭지코지"},
-                    {"day": 2, "order": 1, "name": "우도"},
+                    {
+                        "day": 1, "order": 1, "name": "성산일출봉",
+                        "address": "제주특별자치도 서귀포시 성산읍 성산리",
+                        "latitude": 33.4589, "longitude": 126.9425,
+                    },
+                    {
+                        "day": 1, "order": 2, "name": "섭지코지",
+                        "address": "제주특별자치도 서귀포시 성산읍 고성리",
+                        "latitude": 33.4240, "longitude": 126.9295,
+                    },
+                    {
+                        "day": 2, "order": 1, "name": "우도",
+                        "address": "제주특별자치도 제주시 우도면",
+                        "latitude": 33.5063, "longitude": 126.9544,
+                    },
                 ],
             },
             {
@@ -302,8 +316,16 @@ class RouteRecommendAPIView(APIView):
                 "description": "협재·애월 카페 위주의 여유로운 코스",
                 "days": days,
                 "places": [
-                    {"day": 1, "order": 1, "name": "협재해수욕장"},
-                    {"day": 1, "order": 2, "name": "애월 카페 거리"},
+                    {
+                        "day": 1, "order": 1, "name": "협재해수욕장",
+                        "address": "제주특별자치도 제주시 한림읍 협재리",
+                        "latitude": 33.3947, "longitude": 126.2397,
+                    },
+                    {
+                        "day": 1, "order": 2, "name": "애월 카페거리",
+                        "address": "제주특별자치도 제주시 애월읍 애월리",
+                        "latitude": 33.4633, "longitude": 126.3105,
+                    },
                 ],
             },
             {
@@ -312,8 +334,16 @@ class RouteRecommendAPIView(APIView):
                 "description": "서귀포 중심 맛집 & 관광 코스",
                 "days": days,
                 "places": [
-                    {"day": 1, "order": 1, "name": "서귀포 매일 올레 시장"},
-                    {"day": 1, "order": 2, "name": "정방폭포"},
+                    {
+                        "day": 1, "order": 1, "name": "서귀포 매일올레시장",
+                        "address": "제주특별자치도 서귀포시 중앙로62번길 18",
+                        "latitude": 33.2483, "longitude": 126.5659,
+                    },
+                    {
+                        "day": 1, "order": 2, "name": "정방폭포",
+                        "address": "제주특별자치도 서귀포시 칠십리로214번길 37",
+                        "latitude": 33.2417, "longitude": 126.5716,
+                    },
                 ],
             },
         ]
@@ -400,3 +430,47 @@ class RouteConfirmAPIView(APIView):
                 )
         # 완성된 Route 객체를 반환
         return route
+    
+
+class KakaoPlaceSearchAPIView(APIView):
+    """
+    클라이언트 측에서 검색어(q)를 보내면,
+    백엔드에서 받아 카카오 맵 api 호출 후 검색 결과를 정리해서 응답
+
+    GET /places/search/?q=...
+    """
+
+    # 로그인한 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # 쿼리스트링 가져오기
+        q = (request.query_params.get("q") or "").strip()
+        if not q:
+            return Response({"detail": "q 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 카카오 api 호출
+        url = "https://dapi.kakao.com/v2/local/search/keyword.json"
+        headers = {"Authorization": f"KakaoAK {settings.KAKAO_REST_API_KEY}"}
+        params = {"query": q, "size": 3}
+
+        print("kakao map API 호출중...")
+        try:
+            r = requests.get(url, headers=headers, params=params, timeout=5)
+        except requests.RequestException:
+            return Response({"detail": "카카오 검색 요청에 실패했습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        print("kakao map API 호출완료!")
+        # 요청 결과
+        docs = r.json().get("documents", [])
+        results = []
+        for d in docs:
+            results.append({
+                "id": d.get("id"),
+                "name": d.get("place_name"),
+                "address": d.get("road_address_name") or d.get("address_name") or "",
+                "latitude": float(d["y"]) if d.get("y") else None,
+                "longitude": float(d["x"]) if d.get("x") else None,
+                "place_url": d.get("place_url") or "",
+            })
+        return Response(results)

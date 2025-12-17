@@ -54,20 +54,43 @@ class RouteRecommendInputSerializer(serializers.Serializer):
     AI 추천 루트를 요청할 때 사용하는 입력 값 검증용 serializer
     (DB 모델이 아닌 단순 요청 검증용)
     """
-    days = serializers.IntegerField(min_value=1, max_value=7)
+    # 총 여행 일자
+    days = serializers.IntegerField(min_value=1, max_value=8)
+
+    # 동행자 타입
     companion_type = serializers.ChoiceField(
-        choices=["COUPLE", "FRIENDS", "FAMILY", "SOLO"]
+        choices=[
+            "나홀로 여행", 
+            "2인 여행(가족 외)", 
+            "3인 이상 여행(가족 외)", 
+            "2인 가족 여행", 
+            "자녀 동반 여행", 
+            "부모 동반 여행", 
+            "3대 동반 여행(친척 포함)",
+        ]
     )
-    transport = serializers.ChoiceField(
-        choices=["CAR", "BUS"]
-    )
-    
-    # 사용자로부터 태그가 리스트로 들어올 것이기 때문에 선택한 모든 태그를 리스트로 받음
+    # 동행자 수
+    companion_cnt = serializers.IntegerField(min_value=0, max_value=16)
+
+    # 여행 동기(목적)
     themes = serializers.ListField(
         child=serializers.ChoiceField(
-            choices=["HEALING", "CAFE", "FOOD", "ACTIVITY"]
+            choices=["일상탈출", "힐링", "관계증진", "자아성찰", "자랑/SNS", "건강/액티비티", "새로움/경험", "문화/교육", "행사", "기타"]
         ),
         required=False
+    )
+
+    # 여행 스타일(자연 선호도/도시 선호도)
+    style = serializers.ChoiceField(
+        choices=[
+            "자연 매우 선호",
+            "자연 중간 선호",
+            "자연 약간 선호",
+            "중립",
+            "도시 약간 선호",
+            "도시 중간 선호",
+            "도시 매우 선호",
+        ]
     )
 
 

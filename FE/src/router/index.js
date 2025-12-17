@@ -6,6 +6,7 @@ import RouteRecommendView from '@/views/RouteRecommendView.vue'
 import { useAuthStore } from '@/stores/auth'
 import SignupView from '@/views/SignupView.vue'
 import RouteDetailView from '@/views/RouteDetailView.vue'
+import RouteRecommendInputView from '@/views/RouteRecommendInputView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,7 +29,13 @@ const router = createRouter({
     },
     {
       path: "/routes/recommend",
-      name: "routes-recommend",
+      name: "routes-recommend-input",
+      component: RouteRecommendInputView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/routes/recommend/results",
+      name: "route-recommend-results",
       component: RouteRecommendView,
       meta: { requiresAuth: true },
     },
