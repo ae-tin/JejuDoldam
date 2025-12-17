@@ -1,6 +1,8 @@
 asgiref==3.10.0
 asttokens==3.0.0
 black==25.11.0
+certifi==2025.11.12
+charset-normalizer==3.4.4
 click==8.3.0
 colorama==0.4.6
 decorator==5.2.1
@@ -11,6 +13,7 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 dotenv==0.9.9
 executing==2.2.1
+idna==3.11
 ipython==9.7.0
 ipython_pygments_lexers==1.1.1
 isort==7.0.0
@@ -27,9 +30,11 @@ Pygments==2.19.2
 PyJWT==2.10.1
 python-dotenv==1.2.1
 pytokens==0.3.0
+requests==2.32.5
 sqlparse==0.5.3
 stack-data==0.6.3
 traitlets==5.14.3
 typing_extensions==4.15.0
 tzdata==2025.2
+urllib3==2.6.2
 wcwidth==0.2.14

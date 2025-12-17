@@ -6,33 +6,77 @@
     <form class="recommend-form" @submit.prevent="handleSubmit">
       <div class="field">
         <label for="days">여행 일수</label>
-        <select id="days" v-model.number="form.days">
+        <select id="days" v-model.number="form.how_long">
           <option :value="1">1일</option>
           <option :value="2">2일</option>
           <option :value="3">3일</option>
           <option :value="4">4일</option>
+          <option :value="5">5일</option>
+          <option :value="6">6일</option>
+          <option :value="7">7일</option>
         </select>
       </div>
 
       <div class="field">
         <label for="companion">동행 타입</label>
-        <select id="companion" v-model="form.companionType">
-          <option value="COUPLE">연인</option>
-          <option value="FRIENDS">친구</option>
-          <option value="FAMILY">가족</option>
-          <option value="SOLO">혼자</option>
+        <select id="companion" v-model="form.travel_status_accompany">
+          <option value="나홀로 여행">나홀로 여행</option>
+          <option value="2인 여행(가족 외)">2인 여행(가족 외)</option>
+          <option value="2인 가족 여행">2인 가족 여행</option>
+          <option value="3인 이상 여행(가족 외)">3인 이상 여행(가족 외)</option>
+          <option value="자녀 동반 여행">자녀 동반 여행</option>
+          <option value="부모 동반 여행">부모 동반 여행</option>
+          <option value="3대 동반 여행(친척 포함)">3대 동반 여행(친척 포함)</option>
+          
         </select>
       </div>
 
       <div class="field">
+        <label for="companion">여행 동기</label>
+        <select id="companion" v-model="form.travel_motive_1">
+          <option value="일상 탈출">일상 탈출</option>
+          <option value="휴식과 충전">휴식과 충전</option>
+          <option value="동반자와의 유대감">동반자와의 유대감</option>
+          <option value="자아 성찰">자아 성찰</option>
+          <option value="SNS / 과시">SNS / 과시</option>
+          <option value="운동 / 건강">운동 / 건강</option>
+          <option value="새로운 경험">새로운 경험</option>
+          <option value="문화 탐방 / 교육">문화 탐방 / 교육</option>
+          <option value="특별한 목적(칠순, 신혼, 수학여행 등)">특별한 목적(칠순, 신혼, 수학여행 등)</option>
+          <option value="기타">기타</option>
+          
+        </select>
+      </div>
+
+      <!-- <div class="field">
         <label for="transport">이동 수단</label>
         <select id="transport" v-model="form.transport">
           <option value="CAR">렌트카</option>
           <option value="BUS">대중교통</option>
         </select>
+      </div> -->
+      <div class="slider-wrapper">
+        <label class="title">여행 스타일</label>
+
+        <input
+          type="range"
+          min="1"
+          max="7"
+          step="1"
+          v-model="travelStyle"
+          class="slider"
+        />
+
+        <div class="labels">
+          <span>자연</span>
+          <span class="current">{{ styleLabel }}</span>
+          <span>도시</span>
+        </div>
       </div>
 
-      <div class="field">
+
+      
+      <!-- <div class="field">
         <label>여행 스타일</label>
         <div class="checkbox-group">
           <label>
@@ -52,7 +96,7 @@
             액티비티
           </label>
         </div>
-      </div>
+      </div> -->
 
       <button type="submit" :disabled="loading">
         {{ loading ? '추천 생성 중...' : '루트 추천 받기' }}
@@ -96,17 +140,32 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import api from '@/api/client'   // ✅ 공통 axios 인스턴스
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const travelStyle = ref(4)
+
+const STYLE_LABEL_MAP = {
+  1: "자연 매우선호",
+  2: "자연 중간선호",
+  3: "자연 약간선호",
+  4: "중립",
+  5: "도시 약간선호",
+  6: "도시 중간선호",
+  7: "도시 매우선호",
+}
+
+const styleLabel = computed(() => STYLE_LABEL_MAP[travelStyle.value])
+
 
 const form = reactive({
-  days: 3,
-  companionType: 'COUPLE',
-  transport: 'CAR',
-  themes: [],   // ['HEALING', 'CAFE']
+  how_long: 3,
+  travel_status_accompany: '나홀로 여행',
+  // transport: 'CAR',
+  // themes: [],   // ['HEALING', 'CAFE']
+  travel_motive_1: '일상 탈출',
 })
 
 const loading = ref(false)
@@ -121,10 +180,10 @@ const handleSubmit = async () => {
   try {
     // 1) FE 폼을 BE가 기대하는 형태로 매핑
     const payload = {
-      days: form.days,
-      companion_type: form.companionType,
-      transport: form.transport,
-      themes: form.themes,
+      HOW_LONG : form.how_long,
+      TRAVEL_STATUS_ACCOMPANY: form.travel_status_accompany,
+      TRAVEL_STYL_1: String(travelStyle.value),
+      TRAVEL_MOTIVE_1: form.travel_motive_1,
     }
 
     // 2) 실제 백엔드 추천 API 호출
@@ -255,4 +314,25 @@ function mapRouteToConfirmPayload(route) {
   display: flex;
   gap: 8px;
 }
+
+.slider-wrapper {
+  width: 100%;
+  max-width: 360px;
+}
+
+.slider {
+  width: 100%;
+  margin: 12px 0;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.current {
+  font-weight: 600;
+}
+
 </style>
