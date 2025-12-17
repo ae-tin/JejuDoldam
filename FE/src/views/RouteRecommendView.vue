@@ -163,18 +163,14 @@ const selectedRoute = computed(() => results.value[selectedRouteIndex.value] || 
 const recommendPayload = computed(() => {
   const q = route.query
 
-  const days = Number(q.days)
-  const companion_cnt = Number(q.companion_cnt)
-
-  // themes: "힐링,일상탈출" 같은 문자열 → ["힐링", "일상탈출"]
-  const themes = (q.themes ? String(q.themes).split(',').filter(Boolean) : [])
+  const HOW_LONG = Number(q.HOW_LONG)
+  const TRAVEL_STYL_1 = Number(q.TRAVEL_STYL_1)
 
   return {
-    days,
-    companion_type: q.companion_type ? String(q.companion_type) : '',
-    companion_cnt,
-    style: q.style ? String(q.style) : '',
-    themes,
+    HOW_LONG,
+    TRAVEL_STYL_1,
+    TRAVEL_STATUS_ACCOMPANY: q.TRAVEL_STATUS_ACCOMPANY ? String(q.TRAVEL_STATUS_ACCOMPANY) : '',
+    TRAVEL_MOTIVE_1: q.TRAVEL_MOTIVE_1 ? String(q.TRAVEL_MOTIVE_1) : '',
   }
 })
 
@@ -182,10 +178,10 @@ const recommendPayload = computed(() => {
 const canRecommend = computed(() => {
   const p = recommendPayload.value
   return (
-    Number.isFinite(p.days) && p.days >= 1 && p.days <= 8 &&
-    Number.isFinite(p.companion_cnt) && p.companion_cnt >= 0 && p.companion_cnt <= 16 &&
-    !!p.companion_type &&
-    !!p.style
+    Number.isFinite(p.HOW_LONG) && p.HOW_LONG >= 1 && p.HOW_LONG <= 7 &&
+    Number.isFinite(p.TRAVEL_STYL_1) && p.TRAVEL_STYL_1 >= 1 && p.TRAVEL_STYL_1 <= 7 &&
+    !!p.TRAVEL_STATUS_ACCOMPANY &&
+    !!p.TRAVEL_MOTIVE_1
   )
 })
 
@@ -195,7 +191,7 @@ const canRecommend = computed(() => {
  */
 const dayList = computed(() => {
   if (!selectedRoute.value) return []
-  const n = Number(selectedRoute.value.days || recommendPayload.value.days || 1)
+  const n = Number(selectedRoute.value.days || selectedRoute.value.HOW_LONG || recommendPayload.value.HOW_LONG || 1)
   return Array.from({ length: n }, (_, i) => i + 1)
 })
 
@@ -231,7 +227,7 @@ function selectRoute(idx) {
 /** 추천 응답 -> 편집 가능한 구조로 변환 */
 function toEditableRoute(r) {
   // 응답에 days가 없다면 payload 기준으로 fallback
-  const days = Number(r.days ?? recommendPayload.value.days ?? 1)
+  const days = Number(r.days ?? r.HOW_LONG ?? recommendPayload.value.HOW_LONG ?? 1)
 
   const daysData = Array.from({ length: days }, (_, i) => ({
     day: i + 1,

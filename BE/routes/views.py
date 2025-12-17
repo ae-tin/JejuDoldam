@@ -21,6 +21,7 @@ from .serializers import (
     RouteConfirmInputSerializer,
 )
 
+from pprint import pprint
 
 # Create your views here.
 
@@ -307,13 +308,27 @@ class RouteRecommendAPIView(APIView):
             "TRAVEL_STATUS_RESIDENCE": user_data.residence, # pass
         }
         
+        # ai_input 형식 맞추기
         ai_input_data = {
             **user_info,
             **data,
         }
         ai_input_data = preprocessing_input_data(ai_input_data)
+        
+        # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
+        routes = self.create_ai_routes(ai_input_data)
+        if not routes:
+            return Response({"detail": "경로 추천이 실패하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(routes)
+        
+    
 
-        print(ai_input_data)
+    def create_ai_routes(self, ai_input_data):
+        """
+        AI 모델을 호출하여 추천 경로를 생성하는 함수
+        """
+        # pprint(ai_input_data)
 
         AI_SERVER_URL = "http://127.0.0.1:8001/route_rec_ai"
         ai_response = requests.post(
@@ -323,6 +338,8 @@ class RouteRecommendAPIView(APIView):
         )
 
         ai_result = ai_response.json()
+        # 여러 경로 중 3개만 반환
+        routes = ai_result["result"][0:3]
         ####################################
         # output = {
         #    result: [
@@ -332,81 +349,64 @@ class RouteRecommendAPIView(APIView):
         #    }
         ####################################
         print('*'*30,"성공",'*'*30)
-        print(ai_result["result"][0]) # 여러개 추천 중 첫번째만
+        # pprint(ai_result["result"][0]) # 여러개 추천 중 첫번째만 출력(성공 확인용)
         print('*'*30,"성공",'*'*30)
-        # AI 추천 대신 더미 데이터 생성
-        dummy_routes = self.create_dummy_routes(data)
-        return Response(dummy_routes)
+        return self.parse_route_data(routes)
     
-
-    def create_dummy_routes(self, data: dict) -> list[dict]:
+    
+    def parse_route_data(self, routes):
+        # print(routes)
         """
-        나중에 ai 로직 구현이 완료되면 여기서 호출함
-        지금은 더미 데이터를 하드코딩으로 생성하여 반환
-        """
-        days = data["days"]
-        return [
-            {
+        AI가 생성한 루트 목록을 받아, 클라이언트 및 백엔드가 기대하는 형태로 변환
+        - 반환 형태 예시
+        {
                 "id": 1,
                 "title": f"동부 힐링 루트 ({days}일)",
                 "description": "성산일출봉 · 우도 · 섭지코지 중심 힐링 코스",
                 "days": days,
                 "places": [
-                    {
-                        "day": 1, "order": 1, "name": "성산일출봉",
-                        "address": "제주특별자치도 서귀포시 성산읍 성산리",
-                        "latitude": 33.4589, "longitude": 126.9425,
-                    },
-                    {
-                        "day": 1, "order": 2, "name": "섭지코지",
-                        "address": "제주특별자치도 서귀포시 성산읍 고성리",
-                        "latitude": 33.4240, "longitude": 126.9295,
-                    },
-                    {
-                        "day": 2, "order": 1, "name": "우도",
-                        "address": "제주특별자치도 제주시 우도면",
-                        "latitude": 33.5063, "longitude": 126.9544,
-                    },
+                    {"day": 1, "order": 1, "name": "성산일출봉"},
+                    {"day": 1, "order": 2, "name": "섭지코지"},
+                    {"day": 2, "order": 1, "name": "우도"},
                 ],
             },
-            {
-                "id": 2,
-                "title": f"서부 카페투어 루트 ({days}일)",
-                "description": "협재·애월 카페 위주의 여유로운 코스",
-                "days": days,
-                "places": [
-                    {
-                        "day": 1, "order": 1, "name": "협재해수욕장",
-                        "address": "제주특별자치도 제주시 한림읍 협재리",
-                        "latitude": 33.3947, "longitude": 126.2397,
-                    },
-                    {
-                        "day": 1, "order": 2, "name": "애월 카페거리",
-                        "address": "제주특별자치도 제주시 애월읍 애월리",
-                        "latitude": 33.4633, "longitude": 126.3105,
-                    },
-                ],
-            },
-            {
-                "id": 3,
-                "title": f"남부 맛집 루트 ({days}일)",
-                "description": "서귀포 중심 맛집 & 관광 코스",
-                "days": days,
-                "places": [
-                    {
-                        "day": 1, "order": 1, "name": "서귀포 매일올레시장",
-                        "address": "제주특별자치도 서귀포시 중앙로62번길 18",
-                        "latitude": 33.2483, "longitude": 126.5659,
-                    },
-                    {
-                        "day": 1, "order": 2, "name": "정방폭포",
-                        "address": "제주특별자치도 서귀포시 칠십리로214번길 37",
-                        "latitude": 33.2417, "longitude": 126.5716,
-                    },
-                ],
-            },
-        ]
-    
+
+        """
+        recommend_routes = []
+        id = 0
+        # ai가 생성한 루트들을 순회하며 응답 형태로 만듦
+        # for route in routes:
+        for route in routes:
+            id += 1
+            recommend_route = {
+                "id": id,
+                 "title": route['TITLE'],
+                 "description": route['DESCRIPTION'],
+                 "days": max(route['TRAVEL_DAY']),
+                 "places": []
+            }
+            pre_day = 0
+            for day in range(len(route['TRAVEL_DAY'])):
+                today = route['TRAVEL_DAY'][day]
+                # 일차가 바뀌면 순서도 초기화됨
+                if pre_day != today:
+                    order = 1
+                place = {
+                    "day": today,
+                    "order": order,
+                    "name": route['ADDRESS_NAME'][day],
+                    "address": route['ADDRESS_FULL'][day],
+                    "latitude": route['Y_COORD'][day],
+                    "longitude": route['X_COORD'][day],
+                    "memo": ""
+                    }
+                # 장소 삽입
+                recommend_route["places"].append(place)
+            # 모든 장소 삽입
+            recommend_routes.append(recommend_route)
+        print(recommend_routes)
+        return recommend_routes
+        
 
 
 class RouteConfirmAPIView(APIView):
