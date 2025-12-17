@@ -10,8 +10,8 @@ save_path = BASE_DIR / "AI" / "route_recommend" / "model"
 gps_data_path = BASE_DIR / "AI" / "route_recommend" / "data_local"
 
 df_raw = pd.read_csv(save_path / "rating_user_info_all_cluster.csv")
-
-
+df_desc = pd.read_csv(save_path / "gps_route_desc.csv")
+df_desc = df_desc.set_index("TRAVELER_ID")
 
 model_path = save_path / "user_cluster_kproto.joblib"
 artifacts = load(model_path)
@@ -204,6 +204,10 @@ def find_route(rec_result: dict) -> dict:
         df = pd.read_csv(gps_data_path / fname)
         df = df.where(pd.notna(df), None)
         json_data = df.to_dict(orient="list")
+        # title, description 추가
+        json_data["TITLE"] = df_desc.loc[user, "TITLE"]
+        json_data["DESCRIPTION"] = df_desc.loc[user, "DESCRIPTION"]
+
         result.append(json_data)
     return result
 
