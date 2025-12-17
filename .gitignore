@@ -1,6 +1,20 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,venv,django,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,venv,django,visualstudiocode
 
+## AI venv ##
+venv_cluster
+.venv_cluster
+venv_cluster/
+venv_lightfm_real
+.venv_lightfm_real
+venv_lightfm_real/
+
+## AI data ##
+data_local
+data_local/
+.data_local
+
+
 ### Django ###
 *.log
 *.pot

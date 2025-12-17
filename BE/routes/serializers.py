@@ -94,6 +94,56 @@ class RouteRecommendInputSerializer(serializers.Serializer):
     )
 
 
+class RouteRecommendInputSerializer2(serializers.Serializer):
+    """
+    AI 추천 루트 요청 입력값 검증용 Serializer
+    (한국관광공사/여행 빅데이터 코드 체계 기반)
+    """
+
+    # 여행 스타일 (자연/도시 선호도)
+    TRAVEL_STYL_1 = serializers.ChoiceField(
+        choices=[
+            (1, "자연 매우선호"),
+            (2, "자연 중간선호"),
+            (3, "자연 약간선호"),
+            (4, "중립"),
+            (5, "도시 약간선호"),
+            (6, "도시 중간선호"),
+            (7, "도시 매우선호"),
+        ]
+    )
+
+    # 동반 유형
+    TRAVEL_STATUS_ACCOMPANY = serializers.ChoiceField(
+        choices=[
+            ("나홀로 여행", "나홀로 여행"),
+            ("2인 여행(가족 외)", "2인 여행(가족 외)"),
+            ("3인 이상 여행(가족 외)", "3인 이상 여행(가족 외)"),
+            ("2인 가족 여행", "2인 가족 여행"),
+            ("자녀 동반 여행", "자녀 동반 여행"),
+            ("부모 동반 여행", "부모 동반 여행"),
+            ("3대 동반 여행(친척 포함)", "3대 동반 여행(친척 포함)"),
+        ]
+    )
+
+    # 여행 동기
+    TRAVEL_MOTIVE_1 = serializers.ChoiceField(
+        choices=[
+            ("일상 탈출", "일상 탈출"),
+            ("휴식과 충전", "휴식과 충전"),
+            ("동반자와의 유대감", "동반자와의 유대감"),
+            ("자아 성찰", "자아 성찰"),
+            ("SNS / 과시", "SNS / 과시"),
+            ("운동 / 건강", "운동 / 건강"),
+            ("새로운 경험", "새로운 경험"),
+            ("문화 탐방 / 교육", "문화 탐방 / 교육"),
+            ("특별한 목적(칠순, 신혼, 수학여행 등)", "특별한 목적(칠순, 신혼, 수학여행 등)"),
+            ("기타", "기타"),
+        ]
+    )
+
+    # 여행 기간 (일수)
+    HOW_LONG = serializers.IntegerField(min_value=1, max_value=7)
 
 class RoutePlaceInputSerializer(serializers.Serializer):
     """

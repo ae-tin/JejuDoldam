@@ -446,4 +446,25 @@ watch(
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
 }
+
+.slider-wrapper {
+  width: 100%;
+  max-width: 360px;
+}
+
+.slider {
+  width: 100%;
+  margin: 12px 0;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.current {
+  font-weight: 600;
+}
+
 </style>
