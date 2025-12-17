@@ -266,17 +266,17 @@ class RouteRecommendAPIView(APIView):
 
     example_user = {
         "GENDER": "남",
-        "AGE_GRP": "30",
-        "MARR_STTS": "1",
-        "JOB_NM": "3",
+        "AGE_GRP": 30,
+        "MARR_STTS": 1,
+        "JOB_NM": 3,
         "INCOME": 4,
-        "TRAVEL_STYL_1": "2",
+        "TRAVEL_STYL_1": 2,
         "TRAVEL_STATUS_RESIDENCE": "서울특별자치도",
         "TRAVEL_STATUS_ACCOMPANY": "2인 여행(가족 외)",
-        "TRAVEL_MOTIVE_1": "7",
+        "TRAVEL_MOTIVE_1": 7,
         "TRAVEL_NUM": 3,
         "TRAVEL_COMPANIONS_NUM": 1,
-        "MONTH": "8",
+        "MONTH": 8,
         "SEASON": "summer",
         "HOW_LONG": 3,
     }
@@ -297,7 +297,7 @@ class RouteRecommendAPIView(APIView):
         user_data = get_object_or_404(User, username=request.user)
         user_info = {
             "GENDER": user_data.gender, # pass
-            "AGE_GRP": user_data.birth_date, # calculate in AI API
+            "AGE_GRP": user_data.birth_date, # pass
             "MARR_STTS": user_data.marriage_status, # pass
             "JOB_NM": user_data.job, # pass
             "INCOME": user_data.income, # pass
@@ -321,10 +321,18 @@ class RouteRecommendAPIView(APIView):
         )
 
         ai_result = ai_response.json()
+        ####################################
+        # output = {
+        #    result: [
+        #        route1_dataframe,
+        #        route2_dataframe,
+        #        ,,,]
+        #    }
+        ####################################
+        print('*'*30,"성공",'*'*30)
+        print(ai_result["result"][0]) # 여러개 추천 중 첫번째만
+        print('*'*30,"성공",'*'*30)
         # AI 추천 대신 더미 데이터 생성
-        print('*'*30,"성공",'*'*30)
-        print(ai_result["result"][0])
-        print('*'*30,"성공",'*'*30)
         dummy_routes = self.create_dummy_routes(data)
         return Response(dummy_routes)
     
