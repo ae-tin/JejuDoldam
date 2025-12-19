@@ -1,0 +1,37 @@
+/*
+프론트 최소 이해 세트
+1) 글로벌 테마 사용 시 이벤트는 없고 각 뷰의 렌더링 시 변수 기반 색상이 적용됨.
+2) API 호출은 없으며 CSS 변수만 정의해 전역 스타일에서 참조한다.
+3) 변수들은 Vue 컴포넌트 상태 없이 DOM 스타일에 바로 반영된다.
+4) 흐름: 앱 로드 → main.js에서 CSS 로드 → 컴포넌트가 변수 기반 색을 사용 → UI에 일관된 시그니처 컬러 적용.
+*/
+:root {
+  --color-primary: #2fb2e4;
+  --color-primary-strong: #0d8ec5;
+  --color-secondary: #6dd1b6;
+  --color-surface: #f4fbff;
+  --color-text: #0f172a;
+  --color-muted: #6b7280;
+  --shadow-soft: 0 12px 40px rgba(34, 86, 122, 0.12);
+  --radius-lg: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Pretendard', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(145deg, #f2fcff 0%, #e7f6ff 50%, #e5f9f1 100%);
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}

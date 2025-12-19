@@ -1,46 +1,64 @@
+<!--
+프론트 최소 이해 세트
+1) 내비게이션 클릭/로그아웃 클릭 이벤트가 발생한다.
+2) /auth/me/ GET으로 토큰 유효성을 확인하며 로그아웃 시에는 API 호출 없이 토큰만 제거한다.
+3) 토큰 검증 응답은 사용자의 로그인 상태(auth store)에 반영되고, 화면에는 RouterView와 내비게이션 가시성으로 렌더링된다.
+4) 흐름: 앱 마운트 → 토큰 존재 시 /auth/me/ 검사 → 실패 시 인터셉터가 로그아웃 → 헤더 메뉴 렌더 → RouterView로 각 페이지 표시.
+-->
 <template>
   <div class="app">
     <header class="app-header">
-      <div class="header-left">
-        <RouterLink to="/" class="logo">JejuDoldam</RouterLink>
-      </div>
-      <nav class="header-nav">
-        <!-- 로그인 상태일 때만 보이는 메뉴들 -->
+      <RouterLink to="/" class="brand">
+        <span class="brand-title">JEJU ROUTER</span>
+        <span class="brand-sub">제주 AI ROUTER</span>
+      </RouterLink>
+
+      <nav class="nav">
+        <RouterLink class="nav-link" to="/">홈</RouterLink>
         <RouterLink
           v-if="auth.isAuthenticated"
-          to="/routes/recommend"
           class="nav-link"
+          to="/routes/recommend"
         >
           루트 추천
         </RouterLink>
+        <RouterLink
+          v-if="auth.isAuthenticated"
+          class="nav-link"
+          to="/routes"
+        >
+          내 루트
+        </RouterLink>
+        <RouterLink
+          v-if="auth.isAuthenticated"
+          class="nav-link"
+          to="/community"
+        >
+          커뮤니티
+        </RouterLink>
+      </nav>
 
+      <div class="header-actions">
         <RouterLink
           v-if="auth.isAuthenticated"
           to="/mypage"
-          class="nav-link"
+          class="pill ghost"
         >
           마이페이지
         </RouterLink>
-
-        <!-- 로그인 안 되어 있을 때만 보이는 메뉴 -->
-        <RouterLink
-          v-if="!auth.isAuthenticated"
-          to="/login"
-          class="nav-link"
-        >
-          로그인
-        </RouterLink>
-
-        <!-- 로그아웃 버튼 (로그인 상태에서만) -->
         <button
           v-if="auth.isAuthenticated"
           type="button"
-          class="nav-link nav-button"
+          class="pill primary"
           @click="onLogout"
         >
           로그아웃
         </button>
-      </nav>
+        <template v-else>
+          <RouterLink to="/login" class="pill primary">로그인</RouterLink>
+          <RouterLink to="/signup" class="pill ghost">회원가입</RouterLink>
+        </template>
+      </div>
     </header>
 
     <main class="app-main">
@@ -50,38 +68,29 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@/api/client'
-import AppHeader from '@/components/AppHeader.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
 
 const onLogout = () => {
   if (!confirm('정말 로그아웃 하시겠어요?')) return
-
-  auth.logout()  // finia에서 토큰 삭제 + isAuthenticated = false
+  auth.logout()
   alert('로그아웃 되었습니다.')
   router.push('/login')
 }
 
-
-// 현재 사용자가 로컬 스토리지에 들고있는 토큰이 만료되어있는건지 유효한건지 항상 검사
 onMounted(async () => {
-  // 애초에 토큰이 없다면 검사하지 않음
   if (!auth.isAuthenticated) return
-
   try {
-    // 서버에 현재 로그인 유저 정보 요청
-    // 토큰이 유효하지 않다면 401 -> 인터셉터가 refresh 시도하고 실패했다면 로그아웃 실행
     await api.get('/auth/me/')
   } catch (error) {
-    // 두 토큰 모두 만료된 경우 api 로직에서 알아서 로그아웃됨
+    // 401은 인터셉터에서 처리되므로 여기서는 추가 처리 없음
   }
 })
-
 </script>
 
 <style scoped>
@@ -92,45 +101,115 @@ onMounted(async () => {
 }
 
 .app-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 16px 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
 }
 
-.logo {
-  font-weight: 700;
+.brand {
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
-  color: #111827;
+  color: var(--color-text);
+  gap: 2px;
 }
 
-.header-nav {
+.brand-title {
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.nav {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 14px;
+  flex: 1;
+  justify-content: center;
 }
 
 .nav-link {
   text-decoration: none;
-  color: #4b5563;
+  color: var(--color-muted);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
 .nav-link.router-link-active {
-  font-weight: 600;
-  color: #111827;
+  color: var(--color-text);
+  background: rgba(47, 178, 228, 0.12);
 }
 
-.nav-button {
-  border: none;
-  background: transparent;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.pill.primary {
+  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--shadow-soft);
+}
+
+.pill.ghost {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
 .app-main {
   flex: 1;
-  padding: 24px;
+  padding: 32px 20px 48px;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 </style>
