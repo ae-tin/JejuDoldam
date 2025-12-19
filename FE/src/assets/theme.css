@@ -1,0 +1,119 @@
+/**
+ * ✅ 프론트 최소 이해 세트(theme.css)
+ * 1) 전역 시그니처 컬러(제주 바다 블루)를 CSS 변수로 정의한다.
+ * 2) 공통 버튼/배경/카드 스타일을 지정해 모든 화면에서 일관되게 사용한다.
+ * 3) 기본 타이포와 레이아웃 여백, 배경 그래디언트를 body에 적용한다.
+ * 4) App.vue와 뷰 컴포넌트들은 이 변수들을 사용해 테마를 공유한다.
+ */
+
+:root {
+  --color-primary: #3aa1ff;
+  --color-primary-strong: #2b8ae0;
+  --color-secondary: #b5e9ff;
+  --color-surface: #f4f9ff;
+  --color-surface-strong: #e0f2ff;
+  --color-text: #0f172a;
+  --color-muted: #6b7280;
+  --shadow-soft: 0 10px 40px rgba(49, 129, 196, 0.16);
+  --radius-lg: 18px;
+  --radius-md: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Pretendard', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #e8f5ff 0%, #d7f3ff 25%, #c9edff 50%, #e4f7ff 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), #65d6ff);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 48px rgba(58, 161, 255, 0.24);
+}
+
+.btn-outline {
+  background: white;
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-secondary);
+  padding: 12px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: #eef7ff;
+}
+
+.surface-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: 0 12px 40px rgba(17, 119, 187, 0.08);
+}
+
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(58, 161, 255, 0.1);
+  color: var(--color-primary-strong);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tag-pill {
+  display: inline-block;
+  padding: 8px 12px;
+  background: #f7fbff;
+  border: 1px solid #e7f2ff;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #3b556b;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.section-title small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
