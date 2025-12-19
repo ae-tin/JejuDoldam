@@ -1,17 +1,18 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
-from .models import Post
-from .serialzers import PostSerialzer
+from .models import Post, Comment
+from .serialzers import PostListSerailizer, PostDetailSerializer, CommentSerializer, PostCreateUpdateSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
 # Create your views here.
 
 
 User = get_user_model()
 
-class PostListCreateAPIView(APIView):
+class PostListAPIView(APIView):
     """
     Get /posts/ -> 게시글 목록 조회
     POST /posts/ -> 게시글 작성
@@ -24,26 +25,61 @@ class PostListCreateAPIView(APIView):
         사용자의 GET 요청을 받아 작성된 모든 게시글을 조회하는 함수
         """
         # 최신순으로 정렬
-        posts = Post.objects.order_by("-created_at")
-        serializer = PostSerialzer(posts, many=True)
+        posts = Post.objects.annotate(
+            comment_count=Count("writed_comments", distinct=True),
+            like_count=Count("like_users", distinct=True),
+        ).order_by("-created_at")
+
+        serializer = PostListSerailizer(posts, many=True, context={"request":request})
         return Response(serializer.data)
+
+
+class PostCreateAPIView(APIView):
+    """
+    사용자의 요청을 받아 게시글 생성
+    """
     
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         """
-        사용자의 POST 요청을 받아 유효성 검사를 수행하고
-        게시글을 DB에 반영하는 함수
+        POST -> 게시글 생성
         """
-        # 사용자의 입력을 직렬화
-        serilaizer = PostSerialzer(data=request.data)
-        if serilaizer.is_valid():
-            post = serilaizer.save(user=request.user)
-            return Response(
-                serilaizer.data,
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serilaizer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PostCreateUpdateSerializer(data=request.data, context={"request":request})
+
+        if serializer.is_valid(raise_exception=True):
+            post = serializer.save(user=request.user)
+            return Response(PostCreateUpdateSerializer(post).data, status=status.HTTP_201_CREATED)
 
 
+class PostUpdateDeleteAPIView(APIView):
+    """
+    사용자의 요청을 받아 게시글을 수정 및 삭제
+    """ 
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, post_pk):
+        post = get_object_or_404(Post, pk=post_pk)
+
+        serializer = PostCreateUpdateSerializer(post, data=request.data, partial=True, context={"request":request})
+
+        if request.user != post.user:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        if serializer.is_valid(raise_exception=True):
+            post = serializer.save(user=request.user)
+            return Response(PostCreateUpdateSerializer(post).data)
+        
+    def delete(self, request, post_pk):
+        post = get_object_or_404(Post, pk=post_pk)
+        
+        if request.user != post.user:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+        
 
 class PostDetailAPIView(APIView):
     """
@@ -65,51 +101,66 @@ class PostDetailAPIView(APIView):
         사용자의 GET 요청을 받아 post_pk에 해당하는 post를 조회하는 함수
         """
         post = self.get_object(post_pk)
-        serializer = PostSerialzer(post)
+        serializer = PostDetailSerializer(post, context={"request":request})
         return Response(serializer.data)
+
+
+class LikeAPIView(APIView):
+    """
+    Post   /api/v1/post/"<int:post_pk>/like/
+    -> 게시글 좋아요/좋아요 취소
+    """
+    
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_pk):
+        """
+        사용자의 POST 요청을 받아 좋아요/좋아요 취소를 수행하는 함수
+        """
+        # 게시글 조회
+        post = get_object_or_404(Post, pk=post_pk)
+        # 현재 요청을 보낸 유저가 이미 좋아요 상태인지 아닌지 확인
+        already_liked = post.like_users.filter(pk=request.user.pk).exists()
+
+        if already_liked:
+            post.like_users.remove(request.user)
+            liked = False
+        else:
+            post.like_users.add(request.user)
+            liked = True
+
+        serializer = PostDetailSerializer(post, context={"request":request})
+        return Response({
+            "post_id": post_pk,
+            "liked": liked,
+            "post": serializer.data,
+        })
     
 
-    def put(self, request, post_pk):
-        """
-        사용자의 PUT 요청을 받아 게시글 전체를 수정하는 함수
-        """
-        post = self.get_object(post_pk)
-        # 만약 요청한 사용자와 현재 사용자가 다르다면 400 코드를 반환
-        if request.user != post.user:
-            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = PostSerialzer(post, data=request.data)
-        
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=post.user)
-            return Response(serializer.data)
-        
-    
-    def patch(self, request, post_pk):
-        """
-        사용자의 PATCH 요청을 받아 게시글 일부를 수정하는 함수
-        """
-        post = self.get_object(post_pk)
-        # 요청한 사용자와 현재 사용자가 다르면 400 코드를 반환
-        if request.user != post.user:
-            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+class CommentAPIView(APIView):
+    """
+    POST    /api/v1/post/<int:post_pk>/comment/
+    -> 댓글 생성
+    DELETE    /api/v1/post/<int:comment_pk>/comment/
+    -> 댓글 삭제
+    """
 
-        serializer = PostSerialzer(post, data=request.data, partial=True)
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_pk):
+        post = get_object_or_404(Post, pk=post_pk)
+
+        serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
-            serializer.save(user=post.user)
-            return Response(serializer.data)
+            comment = serializer.save(user=request.user, post=post)
+            return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
         
-    def delete(self, request, post_pk):
-        """
-        사용자의 DELETE 요청을 받아 게시글 삭제를 수행하는 함수
-        """
-        post = self.get_object(post_pk)
-        if request.user != post.user:
-            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        post.delete()
-        return Response({'message': '삭제가 완료되었습니다.'}, status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, comment_pk):
+        comment = get_object_or_404(Comment, pk=comment_pk)
 
-
-
-
+        if request.user != comment.user:
+            return Response({"message": "권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+        
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
