@@ -145,21 +145,22 @@
         </div>
       </section>
 
-      <section class="section">
-        <div class="section-title">인기 제주 여행 루트 미리보기</div>
-        <div class="card-grid">
-          <article v-for="route in popularPreview" :key="route.title" class="card preview-card">
-            <h3>{{ route.title }}</h3>
-            <p>{{ route.desc }}</p>
-            <div class="pill mute">{{ route.tag }}</div>
-          </article>
+      <section class="section popular-section">
+        <div class="section-title">
+          추천 제주 여행 장소
+          <small>루트를 만들기 전에 먼저 둘러볼 만한 제주 인기 스팟</small>
         </div>
-        <div class="cta-box">
-          <div>
-            <div class="eyebrow">루트 추천을 위한 정보만 입력해주세요</div>
-            <p class="cta-desc">여행 기간, 동행 타입, 여행 스타일만 있으면 AI가 알아서 장소를 채워요.</p>
-          </div>
-          <RouterLink to="/routes/recommend" class="btn-primary">루트 무료 추천 받기</RouterLink>
+        <div class="place-grid popular-grid guest-grid">
+          <article v-for="place in popularPlaces" :key="place.name" class="place-card">
+            <div class="thumb" :style="{ backgroundImage: thumbStyle(place.thumbnail) }">
+              <span v-if="!place.thumbnail" class="thumb-fallback">지도 미리보기 준비 중</span>
+            </div>
+            <div class="place-info">
+              <div class="place-name">{{ place.name }}</div>
+              <p class="place-desc">{{ place.desc }}</p>
+              <div class="pill mini">{{ place.tag }}</div>
+            </div>
+          </article>
         </div>
       </section>
     </template>
@@ -253,13 +254,6 @@ const features = [
   { title: '루트 커스터마이즈', desc: '추천 결과를 바로 편집해서 나만의 루트를 완성하세요.' },
   { title: '저장·공유까지 한 번에', desc: '마음에 드는 루트를 저장하고 커뮤니티에서 바로 공유할 수 있어요.' },
   { title: '지도 기반 장소 탐색', desc: '카카오맵으로 주변 맛집과 명소를 빠르게 찾아볼 수 있어요.' },
-]
-
-const popularPreview = [
-  { title: '프리미엄 가을 제주 2박 3일', desc: '쇠소깍과 혼인지 등 자연을 담은 프리미엄 여행', tag: '2박 3일 | 자연·감성' },
-  { title: '자연 & 문화 스팟 한 번에', desc: '일몰 명소부터 올레길까지 여유롭게 돌아보는 루트', tag: '힐링 | 올레길' },
-  { title: '제주 인기 해변 맛집 투어', desc: '해안도로 따라 맛집과 카페를 잇는 미식 여행', tag: '맛집 | 바다 전망' },
-  { title: '가족과 함께하는 서귀포 여행', desc: '아이와 함께하기 좋은 체험 중심 일정', tag: '가족 | 체험' },
 ]
 
 const fetchHome = async () => {
@@ -594,24 +588,8 @@ const thumbStyle = (thumbnail) => (thumbnail ? `url(${thumbnail})` : 'none')
   background: #eef7ff;
 }
 
-.preview-card {
-  cursor: default;
-}
-
-.cta-box {
-  margin-top: 16px;
-  padding: 18px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(58, 161, 255, 0.12), rgba(187, 235, 255, 0.32));
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.cta-desc {
-  margin: 6px 0 0;
-  color: #1f2a44;
+.guest-grid {
+  margin-top: 12px;
 }
 
 @media (max-width: 960px) {
