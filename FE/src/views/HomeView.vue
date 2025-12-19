@@ -106,18 +106,33 @@
       <section class="section two-col">
         <article class="card highlight">
           <div class="section-title">어서 저장해볼까요?</div>
-          <p>AI가 추천한 Day/장소를 바로 내 루트에 저장하고 수정할 수 있어요.</p>
-          <RouterLink to="/routes/recommend" class="btn-primary">루트 추천 받기</RouterLink>
+          <p class="section-lead">AI가 추천한 Day/장소를 바로 내 루트에 저장하고 수정할 수 있어요.</p>
+          <div class="highlight-actions">
+            <RouterLink to="/routes/recommend" class="btn-primary">루트 추천 받기</RouterLink>
+            <RouterLink to="/routes" class="btn-ghost">내 루트 보기</RouterLink>
+          </div>
         </article>
 
         <article class="card info">
-          <div class="section-title">실시간 인기 여행 루트</div>
-          <ul>
-            <li v-for="route in routes.slice(0, 4)" :key="route.id" @click="goRouteDetail(route.id)">
-              <strong>{{ route.title }}</strong>
-              <span>{{ route.description || '제주 인기 스팟을 따라가보세요.' }}</span>
-            </li>
-          </ul>
+          <div class="section-title">실시간 인기 여행 장소</div>
+          <div class="place-grid">
+            <article
+              v-for="place in popularPlaces"
+              :key="place.name"
+              class="place-card"
+              :class="{ clickable: !!place.routeId }"
+              @click="place.routeId && goRouteDetail(place.routeId)"
+            >
+              <div class="thumb" :style="{ backgroundImage: thumbStyle(place.thumbnail) }">
+                <span v-if="!place.thumbnail" class="thumb-fallback">지도 미리보기 준비 중</span>
+              </div>
+              <div class="place-info">
+                <div class="place-name">{{ place.name }}</div>
+                <p class="place-desc">{{ place.desc }}</p>
+                <div class="pill mini">{{ place.tag }}</div>
+              </div>
+            </article>
+          </div>
           <RouterLink to="/routes" class="btn-outline">전체 루트 보기</RouterLink>
         </article>
       </section>
@@ -182,6 +197,54 @@ const error = ref('')
 const recentRoutes = computed(() => routes.value.slice(0, 3))
 const recentPosts = computed(() => posts.value.slice(0, 3))
 
+const kakaoKey =
+  import.meta.env.VITE_KAKAO_JS_KEY || import.meta.env.VITE_KAKAO_REST_KEY || ''
+
+const popularPlaceSeeds = [
+  {
+    name: '성산일출봉 뷰 포인트',
+    desc: '제주 동부의 일출 명소와 주변 해안 산책로',
+    tag: '오션뷰 · 일출',
+    latitude: 33.4589,
+    longitude: 126.9427,
+    routeId: null,
+  },
+  {
+    name: '협재해수욕장 카페 거리',
+    desc: '파란 바다와 모래사장을 감상할 수 있는 카페 라인',
+    tag: '카페 · 드라이브',
+    latitude: 33.3948,
+    longitude: 126.2397,
+    routeId: null,
+  },
+  {
+    name: '우도 서빈백사',
+    desc: '뽀얀 모래와 투명한 바다색이 어우러진 우도 인기 스팟',
+    tag: '섬 여행 · 스노클링',
+    latitude: 33.4996,
+    longitude: 126.9595,
+    routeId: null,
+  },
+  {
+    name: '용머리해안 포토존',
+    desc: '기암절벽과 파도가 만들어내는 웅장한 풍경',
+    tag: '포토스팟 · 지질',
+    latitude: 33.2314,
+    longitude: 126.3148,
+    routeId: null,
+  },
+]
+
+const buildThumbnail = (place) => {
+  if (!kakaoKey || !place.longitude || !place.latitude) return ''
+  const { longitude, latitude } = place
+  return `https://map.kakao.com/staticmap/map.do?appkey=${kakaoKey}&center=${longitude},${latitude}&level=6&w=520&h=260&markers=${longitude},${latitude}`
+}
+
+const popularPlaces = computed(() =>
+  popularPlaceSeeds.map((place) => ({ ...place, thumbnail: buildThumbnail(place) }))
+)
+
 const features = [
   { title: '맞춤 여행 스타일 추천', desc: '취향만 알려주시면 가장 어울리는 테마로 코스를 제안해요.' },
   { title: '루트 커스터마이즈', desc: '추천 결과를 바로 편집해서 나만의 루트를 완성하세요.' },
@@ -234,6 +297,9 @@ const goPostDetail = (postId) => {
 // YYYY-MM-DD 형태로 자르기 위한 헬퍼
 const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없음')
 
+// Kakao static map 썸네일 배경 스타일
+const thumbStyle = (thumbnail) => (thumbnail ? `url(${thumbnail})` : 'none')
+
 </script>
 
 <style scoped>
@@ -251,14 +317,16 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
 }
 
 .hero-auth {
-  background: linear-gradient(135deg, rgba(58, 161, 255, 0.18), rgba(101, 214, 255, 0.24));
+  background: radial-gradient(circle at 20% 20%, rgba(255, 179, 71, 0.16), transparent 46%),
+    linear-gradient(135deg, rgba(51, 176, 201, 0.18), rgba(109, 215, 255, 0.28));
   border-radius: var(--radius-lg);
   padding: 28px;
   box-shadow: var(--shadow-soft);
 }
 
 .hero-guest {
-  background: linear-gradient(135deg, rgba(58, 161, 255, 0.16), rgba(190, 238, 255, 0.32));
+  background: radial-gradient(circle at 20% 20%, rgba(255, 179, 71, 0.18), transparent 46%),
+    linear-gradient(135deg, rgba(51, 176, 201, 0.16), rgba(190, 238, 255, 0.32));
   border-radius: var(--radius-lg);
   padding: 28px;
   box-shadow: var(--shadow-soft);
@@ -273,7 +341,8 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
 .sub {
   color: #1f2a44;
   line-height: 1.6;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  max-width: 640px;
 }
 
 .eyebrow {
@@ -299,6 +368,8 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: #ffffffcc;
+  border: 1px solid #e6f3ff;
 }
 
 .panel-head {
@@ -346,7 +417,7 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
 .section {
   background: rgba(255, 255, 255, 0.74);
   border-radius: var(--radius-lg);
-  padding: 18px;
+  padding: 20px;
   box-shadow: 0 10px 36px rgba(0, 92, 156, 0.08);
 }
 
@@ -358,6 +429,9 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
   box-shadow: 0 8px 30px rgba(0, 73, 125, 0.08);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .card:hover {
@@ -396,6 +470,11 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
   color: #4b5563;
 }
 
+.pill.mini {
+  padding: 4px 8px;
+  font-weight: 700;
+}
+
 .card-meta {
   margin-top: 10px;
   color: var(--color-muted);
@@ -421,7 +500,29 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
 }
 
 .highlight {
-  background: linear-gradient(135deg, rgba(58, 161, 255, 0.14), rgba(101, 214, 255, 0.28));
+  background: linear-gradient(135deg, rgba(51, 176, 201, 0.14), rgba(109, 215, 255, 0.24));
+  border: 1px solid #d8f3ff;
+}
+
+.section-lead {
+  margin: 6px 0 12px;
+  color: #1f2a44;
+  line-height: 1.6;
+}
+
+.highlight-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-ghost {
+  background: #fff;
+  border-radius: 999px;
+  padding: 12px 18px;
+  border: 1px dashed #cdefff;
+  font-weight: 700;
+  color: #0c6888;
 }
 
 .info ul {
@@ -444,6 +545,61 @@ const formatDate = (value) => (value ? String(value).slice(0, 10) : '기록 없�
 .info li strong {
   display: block;
   margin-bottom: 4px;
+}
+
+.place-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.place-card {
+  display: grid;
+  grid-template-rows: 160px 1fr;
+  border: 1px solid #e3f2ff;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 10px 28px rgba(12, 104, 136, 0.08);
+}
+
+.place-card.clickable {
+  cursor: pointer;
+}
+
+.thumb {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.thumb-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #0c6888;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(51, 176, 201, 0.16), rgba(109, 215, 255, 0.24));
+}
+
+.place-info {
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.place-name {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.place-desc {
+  margin: 0;
+  color: #1f2a44;
+  line-height: 1.5;
 }
 
 .feature-card {

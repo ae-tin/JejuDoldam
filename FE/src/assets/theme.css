@@ -1,22 +1,26 @@
 /**
  * ✅ 프론트 최소 이해 세트(theme.css)
- * 1) 전역 시그니처 컬러(제주 바다 블루)를 CSS 변수로 정의한다.
- * 2) 공통 버튼/배경/카드 스타일을 지정해 모든 화면에서 일관되게 사용한다.
- * 3) 기본 타이포와 레이아웃 여백, 배경 그래디언트를 body에 적용한다.
+ * 1) 전역 시그니처 컬러(제주 바다 블루 + 감귤 포인트)를 CSS 변수로 정의한다.
+ * 2) 동글동글한 기본 폰트를 적용해 전체 UI의 인상을 부드럽게 맞춘다.
+ * 3) 공통 버튼/배경/카드 스타일을 지정해 모든 화면에서 일관되게 사용한다.
  * 4) App.vue와 뷰 컴포넌트들은 이 변수들을 사용해 테마를 공유한다.
  */
 
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2106@1.1/NanumSquareRound.css');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+
 :root {
-  --color-primary: #3aa1ff;
-  --color-primary-strong: #2b8ae0;
-  --color-secondary: #b5e9ff;
-  --color-surface: #f4f9ff;
-  --color-surface-strong: #e0f2ff;
+  --color-primary: #33b0c9; /* 청량한 제주 바다 블루그린 */
+  --color-primary-strong: #1497af;
+  --color-accent: #ffb347; /* 감귤 포인트 */
+  --color-secondary: #b5ecff;
+  --color-surface: #f6fbff;
+  --color-surface-strong: #e7f6ff;
   --color-text: #0f172a;
   --color-muted: #6b7280;
-  --shadow-soft: 0 10px 40px rgba(49, 129, 196, 0.16);
-  --radius-lg: 18px;
-  --radius-md: 14px;
+  --shadow-soft: 0 10px 40px rgba(17, 119, 187, 0.14);
+  --radius-lg: 22px;
+  --radius-md: 16px;
 }
 
 * {
@@ -25,9 +29,10 @@
 
 body {
   margin: 0;
-  font-family: 'Pretendard', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #e8f5ff 0%, #d7f3ff 25%, #c9edff 50%, #e4f7ff 100%);
+  font-family: 'NanumSquareRound', 'Fredoka', 'Inter', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at 20% 20%, #e6f9ff, #f4fbff 35%),
+    linear-gradient(135deg, #f4fbff 0%, #d9f4ff 45%, #e5f8ff 100%);
   color: var(--color-text);
   min-height: 100vh;
 }
@@ -37,15 +42,15 @@ a {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary), #65d6ff);
+  background: linear-gradient(135deg, var(--color-primary), #6dd7ff);
   color: white;
   padding: 12px 18px;
   border-radius: 999px;
   border: none;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 12px 28px rgba(17, 119, 187, 0.22);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -60,7 +65,7 @@ a {
   border: 1px solid var(--color-secondary);
   padding: 12px 16px;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease;
 }
