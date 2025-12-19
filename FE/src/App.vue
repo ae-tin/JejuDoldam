@@ -18,13 +18,13 @@
           <RouterLink to="/signup" class="btn-primary">회원가입</RouterLink>
         </template>
         <template v-else>
-          <div class="profile-chip">
+          <RouterLink to="/mypage" class="profile-chip">
             <div class="avatar">{{ userInitial }}</div>
             <div>
               <div class="mini-label">JEJU ROUTER</div>
               <strong>내 계정</strong>
             </div>
-          </div>
+          </RouterLink>
           <button type="button" class="btn-outline" @click="onLogout">로그아웃</button>
         </template>
       </div>
@@ -167,6 +167,8 @@ onMounted(async () => {
   background: #f5f9ff;
   border-radius: 14px;
   border: 1px solid #e2f0ff;
+  color: #0a2540;
+  text-decoration: none;
 }
 
 .avatar {

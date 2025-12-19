@@ -103,38 +103,33 @@
         </div>
       </section>
 
-      <section class="section two-col">
-        <article class="card highlight">
-          <div class="section-title">어서 저장해볼까요?</div>
-          <p class="section-lead">AI가 추천한 Day/장소를 바로 내 루트에 저장하고 수정할 수 있어요.</p>
-          <div class="highlight-actions">
-            <RouterLink to="/routes/recommend" class="btn-primary">루트 추천 받기</RouterLink>
-            <RouterLink to="/routes" class="btn-ghost">내 루트 보기</RouterLink>
-          </div>
-        </article>
-
-        <article class="card info">
-          <div class="section-title">실시간 인기 여행 장소</div>
-          <div class="place-grid">
-            <article
-              v-for="place in popularPlaces"
-              :key="place.name"
-              class="place-card"
-              :class="{ clickable: !!place.routeId }"
-              @click="place.routeId && goRouteDetail(place.routeId)"
-            >
-              <div class="thumb" :style="{ backgroundImage: thumbStyle(place.thumbnail) }">
-                <span v-if="!place.thumbnail" class="thumb-fallback">지도 미리보기 준비 중</span>
-              </div>
-              <div class="place-info">
-                <div class="place-name">{{ place.name }}</div>
-                <p class="place-desc">{{ place.desc }}</p>
-                <div class="pill mini">{{ place.tag }}</div>
-              </div>
-            </article>
-          </div>
+      <section class="section popular-section">
+        <div class="section-title">
+          실시간 인기 여행 장소
+          <small>지금 많이 찾는 제주 스팟을 지도 썸네일로 확인하세요</small>
+        </div>
+        <div class="place-grid popular-grid">
+          <article
+            v-for="place in popularPlaces"
+            :key="place.name"
+            class="place-card"
+            :class="{ clickable: !!place.routeId }"
+            @click="place.routeId && goRouteDetail(place.routeId)"
+          >
+            <div class="thumb" :style="{ backgroundImage: thumbStyle(place.thumbnail) }">
+              <span v-if="!place.thumbnail" class="thumb-fallback">지도 미리보기 준비 중</span>
+            </div>
+            <div class="place-info">
+              <div class="place-name">{{ place.name }}</div>
+              <p class="place-desc">{{ place.desc }}</p>
+              <div class="pill mini">{{ place.tag }}</div>
+            </div>
+          </article>
+        </div>
+        <div class="popular-footer">
           <RouterLink to="/routes" class="btn-outline">전체 루트 보기</RouterLink>
-        </article>
+          <RouterLink to="/community" class="ghost-link">커뮤니티에서 더 보기</RouterLink>
+        </div>
       </section>
     </template>
 
@@ -231,6 +226,14 @@ const popularPlaceSeeds = [
     tag: '포토스팟 · 지질',
     latitude: 33.2314,
     longitude: 126.3148,
+    routeId: null,
+  },
+  {
+    name: '서귀포 매일올레시장',
+    desc: '따끈한 먹거리와 기념품을 한 번에 즐길 수 있는 대표 시장',
+    tag: '야시장 · 먹거리',
+    latitude: 33.2535,
+    longitude: 126.5606,
     routeId: null,
   },
 ]
@@ -492,76 +495,25 @@ const thumbStyle = (thumbnail) => (thumbnail ? `url(${thumbnail})` : 'none')
 .post-card {
   cursor: pointer;
 }
-
-.two-col {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 14px;
-}
-
-.highlight {
-  background: linear-gradient(135deg, rgba(51, 176, 201, 0.14), rgba(109, 215, 255, 0.24));
-  border: 1px solid #d8f3ff;
-}
-
-.section-lead {
-  margin: 6px 0 12px;
-  color: #1f2a44;
-  line-height: 1.6;
-}
-
-.highlight-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.btn-ghost {
-  background: #fff;
-  border-radius: 999px;
-  padding: 12px 18px;
-  border: 1px dashed #cdefff;
-  font-weight: 700;
-  color: #0c6888;
-}
-
-.info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.info li {
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #f8fbff;
-  border: 1px solid #e3f1ff;
-  cursor: pointer;
-}
-
-.info li strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
 .place-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.popular-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
+  margin-top: 12px;
 }
 
 .place-card {
   display: grid;
-  grid-template-rows: 160px 1fr;
+  grid-template-rows: 190px 1fr;
   border: 1px solid #e3f2ff;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   background: white;
-  box-shadow: 0 10px 28px rgba(12, 104, 136, 0.08);
+  box-shadow: 0 12px 30px rgba(12, 104, 136, 0.1);
 }
 
 .place-card.clickable {
@@ -615,6 +567,33 @@ const thumbStyle = (thumbnail) => (thumbnail ? `url(${thumbnail})` : 'none')
   cursor: default;
 }
 
+.popular-section {
+  display: grid;
+  gap: 10px;
+}
+
+.popular-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ghost-link {
+  color: #0a2540;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.ghost-link:hover {
+  background: #eef7ff;
+}
+
 .preview-card {
   cursor: default;
 }
@@ -637,10 +616,6 @@ const thumbStyle = (thumbnail) => (thumbnail ? `url(${thumbnail})` : 'none')
 
 @media (max-width: 960px) {
   .hero {
-    grid-template-columns: 1fr;
-  }
-
-  .two-col {
     grid-template-columns: 1fr;
   }
 }
