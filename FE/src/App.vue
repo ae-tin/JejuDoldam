@@ -4,7 +4,6 @@
       <div class="header-left">
         <RouterLink to="/" class="logo">JejuDoldam</RouterLink>
       </div>
-
       <nav class="header-nav">
         <!-- 로그인 상태일 때만 보이는 메뉴들 -->
         <RouterLink
@@ -55,6 +54,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { onMounted } from 'vue'
 import api from '@/api/client'
+import AppHeader from '@/components/AppHeader.vue'
 
 const router = useRouter()
 const auth = useAuthStore()

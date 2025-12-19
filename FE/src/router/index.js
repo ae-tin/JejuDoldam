@@ -7,6 +7,11 @@ import { useAuthStore } from '@/stores/auth'
 import SignupView from '@/views/SignupView.vue'
 import RouteDetailView from '@/views/RouteDetailView.vue'
 import RouteRecommendInputView from '@/views/RouteRecommendInputView.vue'
+import RouteListView from '@/views/RouteListView.vue'
+import CommunityPostListView from '@/views/CommunityPostListView.vue'
+import CommunityPostCreateView from '@/views/CommunityPostCreateView.vue'
+import CommunityPostDetailView from '@/views/CommunityPostDetailView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,6 +54,30 @@ const router = createRouter({
       name: "route-detail",
       component: RouteDetailView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/routes',
+      name: "routes-list",
+      component: RouteListView,
+      meta: { requiresAuth: true},
+    },
+     { 
+      path: '/community', 
+      name: 'community-list', 
+      component: CommunityPostListView, 
+      meta: { requiresAuth: true } 
+    },
+    { 
+      path: '/community/new', 
+      name: 'community-create', 
+      component: CommunityPostCreateView,
+      meta: { requiresAuth: true } 
+    },
+    { 
+      path: '/community/:postId', 
+      name: 'community-detail', 
+      component: CommunityPostDetailView, 
+      meta: { requiresAuth: true } 
     },
   ],
 })
