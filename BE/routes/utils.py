@@ -1,5 +1,6 @@
 from datetime import date
 import random
+import copy
 
 ACCOMPANY_LABEL_MAP = {
   "나홀로 여행": 0,
@@ -69,7 +70,6 @@ def get_age_group(birth_date: date) -> int:
     """
     if birth_date is None:
         return None
-
     today = date.today()
 
     # 만 나이 계산
@@ -109,7 +109,14 @@ def get_current_month_and_season():
     return month, season
 
 
-def preprocessing_input_data(user_info: dict) -> dict:
+def preprocessing_input_data(user_data: dict, rec="route") -> dict:
+    """
+    루트추천로직 내에서 place, route의 input 처리기능
+    필요한 정보가 다 들어왔을 때를 가정
+    """
+    
+    user_info = copy.deepcopy(user_data)
+
     for key in user_info.keys():
         if key == "AGE_GRP":
             user_info["AGE_GRP"] = get_age_group(user_info["AGE_GRP"])
@@ -124,5 +131,66 @@ def preprocessing_input_data(user_info: dict) -> dict:
     else:
         user_info["TRAVEL_COMPANIONS_NUM"] = ACCOMPANY_LABEL_MAP[user_info["TRAVEL_STATUS_ACCOMPANY"]]
         user_info["MONTH"], user_info["SEASON"] = get_current_month_and_season()
+
+    if rec == "place":
+        user_info["TRAVEL_STATUS_DESTINATION"] = "제주"
+
+    return user_info
+
+'''
+example_user = {
+        "GENDER": "남",
+        "AGE_GRP": 30,
+        "MARR_STTS": 1,
+        "JOB_NM": 3,
+        "INCOME": 4,
+        "TRAVEL_STYL_1": 2,
+        "TRAVEL_STATUS_RESIDENCE": "서울특별자치도",
+        "TRAVEL_STATUS_ACCOMPANY": "2인 여행(가족 외)",
+        "TRAVEL_MOTIVE_1": 7,
+        "TRAVEL_NUM": 3,
+        "TRAVEL_COMPANIONS_NUM": 1,
+        "MONTH": 8,
+        "SEASON": "summer",
+        "HOW_LONG": 3,
+    }
+
+user_info = {
+            "GENDER": user_data.gender, # pass
+            "AGE_GRP": user_data.birth_date, # pass
+            "MARR_STTS": user_data.marriage_status, # pass
+            "JOB_NM": user_data.job, # pass
+            "INCOME": user_data.income, # pass
+            "TRAVEL_NUM": user_data.travel_num, # pass
+            "TRAVEL_STATUS_RESIDENCE": user_data.residence, # pass
+        }
+'''
+def preprocessing_place_input_data(user_data: dict) -> dict:
+    """
+    루트추천로직 외의 place 추천 input 처리기능
+    기본 사용자 정보 외 없는 데이터는 랜덤으로 처리
+    """
+
+    user_info = copy.deepcopy(user_data)
+
+    # user 기본정보만 전처리
+    for key in user_info.keys():
+        if key == "AGE_GRP":
+            user_info["AGE_GRP"] = get_age_group(user_info["AGE_GRP"])
+        elif key == "MARR_STTS":
+            user_info["MARR_STTS"] = MARR_STTS_LABEL_MAP[user_info["MARR_STTS"]]
+        elif key == "JOB_NM":
+            user_info["JOB_NM"] = JOB_NM_LABEL_MAP[user_info["JOB_NM"]]
+        elif key == "INCOME":
+            user_info["INCOME"] = INCOME_LABEL_MAP[user_info["INCOME"]]
+    # 나머지 필요한 정보들은 랜덤으로 처리
+    else:
+        user_info["TRAVEL_STATUS_DESTINATION"] = "제주"
+        user_info["TRAVEL_MOTIVE_1"] = random.choice(list(TRAVEL_MOTIVE_1_LABEL_MAP.values()))
+        user_info["TRAVEL_STYL_1"] = random.choice(range(1,8))
+        user_info["TRAVEL_STATUS_ACCOMPANY"] = random.choice(list(ACCOMPANY_LABEL_MAP.keys()))
+        user_info["TRAVEL_COMPANIONS_NUM"] = ACCOMPANY_LABEL_MAP[user_info["TRAVEL_STATUS_ACCOMPANY"]]
+        user_info["MONTH"], user_info["SEASON"] = get_current_month_and_season()
+        user_info["HOW_LONG"] = random.choice(range(1,9))
 
     return user_info
