@@ -1,6 +1,8 @@
 from datetime import date
 import random
 import copy
+import requests
+from django.conf import settings
 
 ACCOMPANY_LABEL_MAP = {
   "나홀로 여행": 0,
@@ -194,3 +196,41 @@ def preprocessing_place_input_data(user_data: dict) -> dict:
         user_info["HOW_LONG"] = random.choice(range(1,9))
 
     return user_info
+
+
+def fetch_place_id(name, latitude, longitude):
+    """
+    장소 이름과 좌표를 받아 카카오 API를 검색하고
+    가장 정확한 장소의 id를 반환합니다.
+    """
+    if not name:
+        return None
+    
+    url = "https://dapi.kakao.com/v2/local/search/keyword.json"
+    headers = {"Authorization": f"KakaoAK {settings.KAKAO_REST_API_KEY}"}
+    
+    # 1. 검색 파라미터 설정
+    # x: 경도(longitude), y: 위도(latitude), radius: 반경(미터)
+    # sort='distance'로 설정하여 해당 좌표에서 가장 가까운 같은 이름의 장소를 찾습니다.
+    params = {
+        "query": name,
+        "x": longitude,
+        "y": latitude,
+        "radius": 1000, # 1km 반경 내 검색
+        "sort": "distance" 
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            documents = data.get("documents", [])
+            
+            if documents:
+                # 가장 가까운(첫 번째) 결과의 id를 반환
+                return documents[0]["id"]
+    
+    except Exception as e:
+        print(f"카카오 API 호출 실패 {name}: {e}")
+        
+    return None

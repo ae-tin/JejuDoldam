@@ -71,6 +71,7 @@ class RoutePlace(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     memo = models.TextField(blank=True)
+    place_id = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         # 한 일차 안에서는 order가 겹치지 않도록

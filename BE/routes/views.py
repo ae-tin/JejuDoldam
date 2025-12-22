@@ -20,8 +20,8 @@ from .serializers import (
     RoutePlaceInputSerializer,
     RouteConfirmInputSerializer,
 )
-
 from pprint import pprint
+from .utils import fetch_place_id
 
 # Create your views here.
 
@@ -519,6 +519,7 @@ class RouteConfirmAPIView(APIView):
                     latitude=place_data.get("latitude"),
                     longitude=place_data.get("longitude"),
                     memo=place_data.get("memo", ""),
+                    place_id=fetch_place_id(place_data["name"], place_data.get("latitude"), place_data.get("longitude"))
                 )
         # 완성된 Route 객체를 반환
         return route
@@ -566,3 +567,17 @@ class KakaoPlaceSearchAPIView(APIView):
                 "place_url": d.get("place_url") or "",
             })
         return Response(results)
+    
+    
+class RouteDetailInPostAPIView(APIView):
+    """
+    게시글 상세조회 시에만 다른 사람의 루트를 상세조회 할 수 있도록 반환
+    """
+    def get(self, request, route_pk):
+        """
+        로그인한 사용자의 루트를 상세조회하는 함수
+        루트 + days + places 까지 포함하여 상세조회
+        """
+        route = get_object_or_404(Route, pk=route_pk)
+        serializer = RouteDetailSerializer(route)
+        return Response(serializer.data)
