@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from cluster_inference import assign_and_find_similar_gower, find_route
 from pydantic import BaseModel
-'''
+
+"""
 example_user = {
     "GENDER": "남",
     "AGE_GRP": 30,
@@ -18,9 +19,11 @@ example_user = {
     "SEASON": "summer",
     "HOW_LONG": 3,
 }
-'''
+"""
 
 app = FastAPI()
+
+
 class PredictRequest(BaseModel):
     GENDER: str
     AGE_GRP: int
@@ -37,6 +40,7 @@ class PredictRequest(BaseModel):
     SEASON: str
     HOW_LONG: int
 
+
 # ------------------
 # 엔드포인트
 # ------------------
@@ -44,4 +48,4 @@ class PredictRequest(BaseModel):
 def predict(req: PredictRequest):
     top_users = assign_and_find_similar_gower(req.dict())
     result = find_route(top_users)
-    return {"result":result}
+    return {"result": result}
