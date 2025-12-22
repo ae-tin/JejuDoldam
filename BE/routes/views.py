@@ -1,8 +1,7 @@
 import requests
-import copy
 from django.db import transaction, IntegrityError
 from django.conf import settings
-from django.shortcuts import get_list_or_404, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -16,14 +15,13 @@ from .serializers import (
     RouteDaySerializer,
     RoutePlaceSerializer,
     RouteRecommendInputSerializer2,
-    RouteDayInputSerializer,
-    RoutePlaceInputSerializer,
     RouteConfirmInputSerializer,
 )
 from pprint import pprint
 from .utils import fetch_place_id
 
 # Create your views here.
+
 
 class RouteListCreateAPIView(APIView):
     """
@@ -42,7 +40,6 @@ class RouteListCreateAPIView(APIView):
         serializer = RouteSerializer(routes, many=True)
         return Response(serializer.data)
 
-
     def post(self, request):
         """
         로그인한 사용자의 요청을 받아 새로운 루트를 생성함
@@ -51,7 +48,6 @@ class RouteListCreateAPIView(APIView):
         if serializer.is_valid(raise_exception=True):
             route = serializer.save(user=request.user)
             return Response(RouteSerializer(route).data, status=status.HTTP_201_CREATED)
-        
 
 
 class RouteDetailAPIView(APIView):
@@ -61,7 +57,7 @@ class RouteDetailAPIView(APIView):
     PATCH /routes/<route_pk>/ -> 루트 일부 수정
     DELETE /routes/<route_pk>/ -> 루트 삭제
     """
-    
+
     # 로그인한 사용자만 상호작용 하도록 설정
     permission_classes = [IsAuthenticated]
 
@@ -71,7 +67,6 @@ class RouteDetailAPIView(APIView):
         """
         return get_object_or_404(Route, pk=route_pk, user=request.user)
 
-
     def get(self, request, route_pk):
         """
         로그인한 사용자의 루트를 상세조회하는 함수
@@ -80,7 +75,6 @@ class RouteDetailAPIView(APIView):
         route = self.get_object(request, route_pk)
         serializer = RouteDetailSerializer(route)
         return Response(serializer.data)
-    
 
     def put(self, request, route_pk):
         """
@@ -91,8 +85,7 @@ class RouteDetailAPIView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
-        
-        
+
     def patch(self, request, route_pk):
         """
         로그인한 사용자의 루트를 일부 수정하는 함수
@@ -102,7 +95,6 @@ class RouteDetailAPIView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
-        
 
     def delete(self, request, route_pk):
         """
@@ -111,7 +103,6 @@ class RouteDetailAPIView(APIView):
         route = self.get_object(request, route_pk)
         route.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
 
 class RouteDayCreateAPIView(APIView):
@@ -137,11 +128,14 @@ class RouteDayCreateAPIView(APIView):
                 route_day = serializer.save(route=route)
             except Exception:
                 # 이미 같은 day가 있는 경우
-                return Response({"detail": "이미 해당 일차가 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response(
+                    {"detail": "이미 해당 일차가 존재합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # 무사히 지나와서 저장이 완료되었다면 정상 응답
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
 
 class RouteDayDetailAPIView(APIView):
     """
@@ -151,7 +145,7 @@ class RouteDayDetailAPIView(APIView):
 
     # 로그인한 사용자만 접근 가능
     permission_classes = [IsAuthenticated]
-    
+
     def get_object(self, requset, day_pk):
         """
         요청을 보낸 사용자의 루트인지 확인하고 아니라면 None을 반환함
@@ -165,8 +159,10 @@ class RouteDayDetailAPIView(APIView):
         route_day = get_object_or_404(RouteDay, pk=day_pk)
         # 요청을 보낸 사용자의 루트가 아니면 None이 반환되었을 것
         if route_day is None:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
+            return Response(
+                {"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = RouteDaySerializer(route_day, data=request.data, partial=True)
 
         if serializer.is_valid(raise_exception=True):
@@ -174,26 +170,30 @@ class RouteDayDetailAPIView(APIView):
                 serializer.save()
             except Exception:
                 # 이미 일차가 존재하면 실패함
-                return Response({"detail": "해당 일차가 이미 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response(
+                    {"detail": "해당 일차가 이미 존재합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # 무사히 넘어왔다면 저장 성공 응답
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
     def delete(self, request, day_pk):
         route_day = get_object_or_404(RouteDay, pk=day_pk)
         # 요청을 보낸 사용자의 루트가 아니면 None이 반환되었을 것
         if route_day is None:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
         route_day.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 class RoutePlaceCreateAPIView(APIView):
     """
     POST /routes/days/<day_pk>/places/
     """
-    
+
     # 로그인한 사용자만 접근 가능
     permission_classes = [IsAuthenticated]
 
@@ -201,8 +201,10 @@ class RoutePlaceCreateAPIView(APIView):
         # day_pk로 RouteDay 조회 + 요청한 유저의 Route에 속해있는지 확인
         route_day = get_object_or_404(RouteDay, pk=day_pk)
         if route_day.route.user != request.user:
-            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
+            return Response(
+                {"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
+
         # 사용자의 요청으로부터 장소 정보를 받아옴
         serializer = RoutePlaceSerializer(data=request.data)
 
@@ -211,10 +213,15 @@ class RoutePlaceCreateAPIView(APIView):
                 place = serializer.save(route_day=route_day)
             except Exception:
                 # unique_together 때문에 route_day 및 order 중복 불가
-                return Response({"detail": "해당 일차에 이미 같은 순서의 장소가 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "해당 일차에 이미 같은 순서의 장소가 있습니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # 무사히 저장이 지나와서 저장이 완료되었다면 정상 응답
-        return Response(RoutePlaceSerializer(place).data, status=status.HTTP_201_CREATED)
+        return Response(
+            RoutePlaceSerializer(place).data, status=status.HTTP_201_CREATED
+        )
 
 
 class RoutePlaceDetailAPIView(APIView):
@@ -234,12 +241,14 @@ class RoutePlaceDetailAPIView(APIView):
         if place.route_day.route.user != requset.user:
             return None
         return place
-    
+
     def patch(self, request, place_pk):
         place = self.get_object(request, place_pk)
         if place is None:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
+            return Response(
+                {"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = RoutePlaceSerializer(place, data=request.data, partial=True)
 
         if serializer.is_valid(raise_exception=True):
@@ -247,16 +256,20 @@ class RoutePlaceDetailAPIView(APIView):
                 serializer.save()
             except Exception:
                 # route_day 혹은 order 중복으로 저장 실패
-                return Response({"detail": "해당 일차에 이미 같은 순서의 장소가 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response(
+                    {"detail": "해당 일차에 이미 같은 순서의 장소가 존재합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         # 무사히 저장 완료 응답
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
 
     def delete(self, request, place_pk):
         place = self.get_object(request, place_pk)
         if place is None:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
         place.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -284,30 +297,30 @@ class RouteRecommendAPIView(APIView):
         "HOW_LONG": 3,
     }
     """
+
     # 로그인한 사용자만 접근 가능
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        
         # 입력값 검증
         serializer = RouteRecommendInputSerializer2(data=request.data)
         # 유효성 검사
         serializer.is_valid(raise_exception=True)
         # 유효성 검사를 통과한 깨끗한 데이터를 변수에 할당
         data = serializer.validated_data
-        
+
         # 유저 DB 정보 로드
         user_data = get_object_or_404(User, username=request.user)
         user_info = {
-            "GENDER": user_data.gender, # pass
-            "AGE_GRP": user_data.birth_date, # pass
-            "MARR_STTS": user_data.marriage_status, # pass
-            "JOB_NM": user_data.job, # pass
-            "INCOME": user_data.income, # pass
-            "TRAVEL_NUM": user_data.travel_num, # pass
-            "TRAVEL_STATUS_RESIDENCE": user_data.residence, # pass
+            "GENDER": user_data.gender,  # pass
+            "AGE_GRP": user_data.birth_date,  # pass
+            "MARR_STTS": user_data.marriage_status,  # pass
+            "JOB_NM": user_data.job,  # pass
+            "INCOME": user_data.income,  # pass
+            "TRAVEL_NUM": user_data.travel_num,  # pass
+            "TRAVEL_STATUS_RESIDENCE": user_data.residence,  # pass
         }
-        
+
         # ai_input 형식 맞추기
         ai_input_data = {
             **user_info,
@@ -315,20 +328,22 @@ class RouteRecommendAPIView(APIView):
         }
 
         # ai 장소 추천 생성 전처리 및 호출
-        print('before: ', ai_input_data["AGE_GRP"])
         place_ai_input_random_data = preprocessing_place_input_data(user_info)
         place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
         places_random_data = self.create_ai_places(place_ai_input_random_data)
         places_full_data = self.create_ai_places(place_ai_input_full_data)
-        
+
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
         route_ai_input_data = preprocessing_input_data(ai_input_data)
         routes = self.create_ai_routes(route_ai_input_data)
         if not routes:
-            return Response({"detail": "경로 추천이 실패하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": "경로 추천이 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return Response(routes)
-        
+
     def create_ai_places(self, ai_input_data):
         """
         AI 모델을 호출하여 추천 경로를 생성하는 함수
@@ -336,11 +351,7 @@ class RouteRecommendAPIView(APIView):
         # pprint(ai_input_data)
 
         AI_SERVER_URL = "http://127.0.0.1:8002/place_rec_ai"
-        ai_response = requests.post(
-            AI_SERVER_URL,
-            json=ai_input_data,
-            timeout=5
-        )
+        ai_response = requests.post(AI_SERVER_URL, json=ai_input_data, timeout=5)
 
         ai_result = ai_response.json()
         places = ai_result["result"]
@@ -352,9 +363,9 @@ class RouteRecommendAPIView(APIView):
         #        ,,,]
         #    }
         ####################################
-        print('*'*30,"성공",'*'*30)
-        pprint(places) # 여러개 추천 중 첫번째만 출력(성공 확인용)
-        print('*'*30,"성공",'*'*30)
+        # print("*" * 30, "성공", "*" * 30)
+        # pprint(places)  # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        # print("*" * 30, "성공", "*" * 30)
         return places
 
     def create_ai_routes(self, ai_input_data):
@@ -364,11 +375,7 @@ class RouteRecommendAPIView(APIView):
         # pprint(ai_input_data)
 
         AI_SERVER_URL = "http://127.0.0.1:8001/route_rec_ai"
-        ai_response = requests.post(
-            AI_SERVER_URL,
-            json=ai_input_data,
-            timeout=5
-        )
+        ai_response = requests.post(AI_SERVER_URL, json=ai_input_data, timeout=5)
 
         ai_result = ai_response.json()
         # 여러 경로 중 3개만 반환
@@ -385,8 +392,7 @@ class RouteRecommendAPIView(APIView):
         # pprint(ai_result["result"][0]) # 여러개 추천 중 첫번째만 출력(성공 확인용)
         # print('*'*30,"성공",'*'*30)
         return self.parse_route_data(routes)
-    
-    
+
     def parse_route_data(self, routes):
         # print(routes)
         """
@@ -413,33 +419,32 @@ class RouteRecommendAPIView(APIView):
             id += 1
             recommend_route = {
                 "id": id,
-                 "title": route['TITLE'],
-                 "description": route['DESCRIPTION'],
-                 "days": max(route['TRAVEL_DAY']),
-                 "places": []
+                "title": route["TITLE"],
+                "description": route["DESCRIPTION"],
+                "days": max(route["TRAVEL_DAY"]),
+                "places": [],
             }
             pre_day = 0
-            for day in range(len(route['TRAVEL_DAY'])):
-                today = route['TRAVEL_DAY'][day]
+            for day in range(len(route["TRAVEL_DAY"])):
+                today = route["TRAVEL_DAY"][day]
                 # 일차가 바뀌면 순서도 초기화됨
                 if pre_day != today:
                     order = 1
                 place = {
                     "day": today,
                     "order": order,
-                    "name": route['ADDRESS_NAME'][day],
-                    "address": route['ADDRESS_FULL'][day],
-                    "latitude": route['Y_COORD'][day],
-                    "longitude": route['X_COORD'][day],
-                    "memo": ""
-                    }
+                    "name": route["ADDRESS_NAME"][day],
+                    "address": route["ADDRESS_FULL"][day],
+                    "latitude": route["Y_COORD"][day],
+                    "longitude": route["X_COORD"][day],
+                    "memo": "",
+                }
                 # 장소 삽입
                 recommend_route["places"].append(place)
             # 모든 장소 삽입
             recommend_routes.append(recommend_route)
         # print(recommend_routes)
         return recommend_routes
-        
 
 
 class RouteConfirmAPIView(APIView):
@@ -482,12 +487,15 @@ class RouteConfirmAPIView(APIView):
             route = self.create_route_days_places(request.user, data)
         except IntegrityError:
             # DB unique 관련 에러 발생 시
-            return Response({"detail": "중복된 day 또는 장소 또는 순서(order)가 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "중복된 day 또는 장소 또는 순서(order)가 존재합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # 생성된 Route 전체 구조를 상세 serializer로 응답
         output_serializer = RouteDetailSerializer(route)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def create_route_days_places(slef, user, data: dict) -> Route:
         """
         validated_data를 바탕으로
@@ -512,10 +520,12 @@ class RouteConfirmAPIView(APIView):
             # 생성된 일차 정보의 장소를 순회하며 일차와 장소를 매핑
             for place_data in day_data["places"]:
                 RoutePlace.objects.create(
-                    route_day = route_day,
-                    order = place_data["order"],
+                    route_day=route_day,
+                    order=place_data["order"],
                     name=place_data["name"],
-                    address=place_data.get("address", ""),  # 선택 입력 사항은 .get으로 처리
+                    address=place_data.get(
+                        "address", ""
+                    ),  # 선택 입력 사항은 .get으로 처리
                     latitude=place_data.get("latitude"),
                     longitude=place_data.get("longitude"),
                     memo=place_data.get("memo", ""),
@@ -523,7 +533,7 @@ class RouteConfirmAPIView(APIView):
                 )
         # 완성된 Route 객체를 반환
         return route
-    
+
 
 class KakaoPlaceSearchAPIView(APIView):
     """
@@ -540,8 +550,11 @@ class KakaoPlaceSearchAPIView(APIView):
         # 쿼리스트링 가져오기
         q = (request.query_params.get("q") or "").strip()
         if not q:
-            return Response({"detail": "q 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": "q 파라미터가 필요합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # 카카오 api 호출
         url = "https://dapi.kakao.com/v2/local/search/keyword.json"
         headers = {"Authorization": f"KakaoAK {settings.KAKAO_REST_API_KEY}"}
@@ -551,8 +564,11 @@ class KakaoPlaceSearchAPIView(APIView):
         try:
             r = requests.get(url, headers=headers, params=params, timeout=5)
         except requests.RequestException:
-            return Response({"detail": "카카오 검색 요청에 실패했습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": "카카오 검색 요청에 실패했습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         print("kakao map API 호출완료!")
         # 요청 결과
         docs = r.json().get("documents", [])

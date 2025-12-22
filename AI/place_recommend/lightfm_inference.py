@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from scipy.sparse import coo_matrix, load_npz, csr_matrix
+from scipy.sparse import load_npz, csr_matrix
 import pickle
 import json
+from utils import trace_error, replace_nan
 
 BASE_DIR = Path().resolve().parent.parent
 save_path = BASE_DIR / "AI" / "place_recommend" / "model"
@@ -28,7 +29,6 @@ with open(save_path / "name_to_item_id.pkl", "rb") as f:
     name_to_item_id = pickle.load(f)
 
 
-
 # 학습 때 사용했던 prefix 규칙 그대로
 USER_PREFIX_MAP = {
     "GENDER": "gender",
@@ -49,6 +49,7 @@ USER_PREFIX_MAP = {
 }
 
 
+@trace_error
 def build_new_user_features(new_user: dict) -> csr_matrix:
     """
     new_user = {
@@ -76,7 +77,7 @@ def build_new_user_features(new_user: dict) -> csr_matrix:
     return csr_matrix(row)
 
 
-
+@trace_error
 def recommend_for_new_jeju_user(new_user: dict, topn: int = 5):
     # 1) 새 유저 feature 벡터 (user_id=0 가정)
     new_user_features = build_new_user_features(new_user)
@@ -104,9 +105,23 @@ def recommend_for_new_jeju_user(new_user: dict, topn: int = 5):
     rec["rank"] = np.arange(1, len(rec) + 1)
 
     result = rec[
-        ["rank", "item_id", "score", "VISIT_AREA_NM", "SIDO", "VISIT_AREA_TYPE_CD", "ratings",
-         'ROAD_NM_ADDR','LOTNO_ADDR','X_COORD','Y_COORD']
+        [
+            "rank",
+            "item_id",
+            "score",
+            "VISIT_AREA_NM",
+            "SIDO",
+            "VISIT_AREA_TYPE_CD",
+            "ratings",
+            "ROAD_NM_ADDR",
+            "LOTNO_ADDR",
+            "X_COORD",
+            "Y_COORD",
+        ]
     ]
     result = result.where(pd.notna(result), None)
     json_data = result.to_dict(orient="list")
+    json_data = replace_nan(json_data)
+    if not json_data:
+        print("추천 장소가 존재하지 않습니다")
     return json_data

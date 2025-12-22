@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from lightfm_inference import recommend_for_new_jeju_user
 from pydantic import BaseModel
 import warnings
+
 warnings.filterwarnings("ignore")
-'''
+"""
 example_user = {
     "GENDER": "남",
     "AGE_GRP": 30,
@@ -21,9 +22,11 @@ example_user = {
     "SEASON": "summer",
     "HOW_LONG": 3,
 }
-'''
+"""
 
 app = FastAPI()
+
+
 class PredictRequest(BaseModel):
     GENDER: str
     AGE_GRP: int
@@ -41,10 +44,11 @@ class PredictRequest(BaseModel):
     SEASON: str
     HOW_LONG: int
 
+
 # ------------------
 # 엔드포인트
 # ------------------
 @app.post("/place_rec_ai")
 def predict(req: PredictRequest):
     result = recommend_for_new_jeju_user(req.dict())
-    return {"result":result}
+    return {"result": result}
