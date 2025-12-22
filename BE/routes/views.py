@@ -529,7 +529,6 @@ class RouteConfirmAPIView(APIView):
                     latitude=place_data.get("latitude"),
                     longitude=place_data.get("longitude"),
                     memo=place_data.get("memo", ""),
-                    place_id=fetch_place_id(place_data["name"], place_data.get("latitude"), place_data.get("longitude"))
                 )
         # 완성된 Route 객체를 반환
         return route

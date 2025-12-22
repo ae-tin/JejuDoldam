@@ -16,8 +16,8 @@ class RoutePlaceSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = RoutePlace
-        fields = ["id", "order", "name", "address", "latitude", "longitude", "memo", "place_id"]
-        read_only_fields = ["id", "place_id"]
+        fields = ["id", "order", "name", "address", "latitude", "longitude", "memo",]
+        read_only_fields = ["id",]
 
 class RouteDaySerializer(serializers.ModelSerializer):
     """
@@ -155,7 +155,6 @@ class RoutePlaceInputSerializer(serializers.Serializer):
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
     memo = serializers.CharField(required=False, allow_blank=True)
-    place_id = serializers.CharField(max_length=50, allow_blank=True, allow_null=True, required=False)
 
 class RouteDayInputSerializer(serializers.Serializer):
     """
