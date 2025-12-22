@@ -26,9 +26,6 @@
               <h2 class="route-title">{{ routeDetail?.title ?? post.route.title }}</h2>
               <p class="route-desc" v-if="routeDetail?.description">{{ routeDetail.description }}</p>
             </div>
-            <RouterLink :to="{ name: 'route-detail', params: { routeId: post.route.id } }" class="route-link">
-              루트 상세보기
-            </RouterLink>
           </div>
           <div class="map-shell">
             <KakaoMap :places="dayPlaces" />
@@ -259,7 +256,7 @@ const fetchRouteDetail = async (routeId) => {
   routeLoading.value = true
   routeError.value = ''
   try {
-    const { data } = await api.get(`/routes/${routeId}/`)
+    const { data } = await api.get(`/routes/post/${routeId}/`)
     routeDetail.value = data
 
     const first = [...(data.days || [])].sort((a, b) => a.day - b.day)[0]
