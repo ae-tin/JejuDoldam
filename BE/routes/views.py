@@ -1,14 +1,14 @@
 import requests
+import copy
 from django.db import transaction, IntegrityError
 from django.conf import settings
-import requests
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Route, RouteDay, RoutePlace
-from .utils import preprocessing_input_data
+from .utils import preprocessing_input_data, preprocessing_place_input_data
 from accounts.models import User
 from .serializers import (
     RouteSerializer,
@@ -313,16 +313,49 @@ class RouteRecommendAPIView(APIView):
             **user_info,
             **data,
         }
-        ai_input_data = preprocessing_input_data(ai_input_data)
+
+        # ai 장소 추천 생성 전처리 및 호출
+        print('before: ', ai_input_data["AGE_GRP"])
+        place_ai_input_random_data = preprocessing_place_input_data(user_info)
+        place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
+        places_random_data = self.create_ai_places(place_ai_input_random_data)
+        places_full_data = self.create_ai_places(place_ai_input_full_data)
         
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
-        routes = self.create_ai_routes(ai_input_data)
+        route_ai_input_data = preprocessing_input_data(ai_input_data)
+        routes = self.create_ai_routes(route_ai_input_data)
         if not routes:
             return Response({"detail": "경로 추천이 실패하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(routes)
         
-    
+    def create_ai_places(self, ai_input_data):
+        """
+        AI 모델을 호출하여 추천 경로를 생성하는 함수
+        """
+        # pprint(ai_input_data)
+
+        AI_SERVER_URL = "http://127.0.0.1:8002/place_rec_ai"
+        ai_response = requests.post(
+            AI_SERVER_URL,
+            json=ai_input_data,
+            timeout=5
+        )
+
+        ai_result = ai_response.json()
+        places = ai_result["result"]
+        ####################################
+        # output = {
+        #    result: [
+        #        route1_dataframe,
+        #        route2_dataframe,
+        #        ,,,]
+        #    }
+        ####################################
+        print('*'*30,"성공",'*'*30)
+        pprint(places) # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        print('*'*30,"성공",'*'*30)
+        return places
 
     def create_ai_routes(self, ai_input_data):
         """
@@ -348,9 +381,9 @@ class RouteRecommendAPIView(APIView):
         #        ,,,]
         #    }
         ####################################
-        print('*'*30,"성공",'*'*30)
+        # print('*'*30,"성공",'*'*30)
         # pprint(ai_result["result"][0]) # 여러개 추천 중 첫번째만 출력(성공 확인용)
-        print('*'*30,"성공",'*'*30)
+        # print('*'*30,"성공",'*'*30)
         return self.parse_route_data(routes)
     
     
@@ -404,7 +437,7 @@ class RouteRecommendAPIView(APIView):
                 recommend_route["places"].append(place)
             # 모든 장소 삽입
             recommend_routes.append(recommend_route)
-        print(recommend_routes)
+        # print(recommend_routes)
         return recommend_routes
         
 
