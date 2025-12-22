@@ -1,61 +1,104 @@
 // src/api/client.js
-import { useAuthStore } from '@/stores/auth';
-import axios from 'axios';
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
+/**
+ * ✅ baseURL을 "환경변수 → 없으면 기본값(/api/v1)" 순서로 사용
+ * - 개발(dev): VITE_API_BASE_URL을 http://127.0.0.1:8000/api/v1 로 둘 수도 있고
+ * - 운영(prod): VITE_API_BASE_URL 없이 /api/v1 로도 동작하게 만들 수 있음
+ */
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+/**
+ * ✅ 실제 API 호출용 axios 인스턴스
+ * - 모든 요청이 BASE_URL 기준으로 나감
+ */
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/v1',
-});
+  baseURL: BASE_URL,
+})
 
-// 매 요청마다 access 토큰을 Authorization 헤더에 실어줌
+/**
+ * ✅ refresh 전용 axios 인스턴스 (중요)
+ * - api 인스턴스를 refresh에 쓰면 "인터셉터 → 401 → refresh → 또 인터셉터…" 같은 꼬임이 날 수 있어서
+ *   refresh는 별도 인스턴스로 분리하는 게 안전함
+ */
+const refreshClient = axios.create({
+  baseURL: BASE_URL,
+})
+
+/**
+ * ✅ [요청 인터셉터]
+ * 요청이 서버로 나가기 직전에 Authorization 헤더에 access 토큰을 붙임
+ *
+ * 요청 → (여기서 토큰 붙임) → 서버 처리 → 응답
+ */
 api.interceptors.request.use((config) => {
-  const access = localStorage.getItem('access');
+  const access = localStorage.getItem('access')
+
+  // headers가 비어있을 수 있으니 안전하게 초기화
+  config.headers = config.headers || {}
+
   if (access) {
-    config.headers.Authorization = `Bearer ${access}`;
+    config.headers.Authorization = `Bearer ${access}`
   }
-  return config;
-});
 
+  return config
+})
 
-// 매 응답을 인터셉터가 가로채서 검사: 401 반환시 refresh 시도 및 로그아웃 처리
+/**
+ * ✅ [응답 인터셉터]
+ * 응답이 돌아오는 순간 검사해서, 401이면 refresh로 access 재발급 후 원래 요청을 재시도
+ *
+ * 응답(401) → refresh 요청 → 새 access 저장 → 실패했던 요청 재시도 → 최종 응답
+ */
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const auth = useAuthStore();
-    const originalRequest = error.config;
+    const auth = useAuthStore()
+    const originalRequest = error.config
 
-    // access 토큰 만료 등으로 401 반환 및 아직 재시도하지 않았다면(무한 재시도 방지)
+    // 401 + 아직 재시도 안한 요청만 처리 (무한루프 방지)
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      const refresh = localStorage.getItem('refresh');
+      originalRequest._retry = true
 
-      // 만약 refresh가 없다면 로그아웃처리
+      const refresh = localStorage.getItem('refresh')
+
+      // refresh 토큰이 없으면 더 이상 갱신 불가 → 로그아웃
       if (!refresh) {
-        auth.logout();
-        return Promise.reject(error);
+        auth.logout()
+        return Promise.reject(error)
       }
 
       try {
-        // refresh 토큰으로 access 재발급 요쳥
-        const { data } = await axios.post(
-          'http://127.0.0.1:8000/api/v1/auth/jwt/refresh/',
-          { refresh }
-        )
-        // 다시 발급받은 access 토큰으로 로그인
-        const newAceess = data.access;
-        auth.login(newAceess, refresh);
-        console.log('jwt 리프레시')
-        // 실패했던 요청을 다시 새로운 access 토큰과 함께 보냄
-        originalRequest.headers.Authorization = `Bearer ${newAceess}`;
-        return api(originalRequest);
-      } catch (error) {
-        // 위에서 재로그인 실패시 refresh도 만료된 것 -> 로그아웃 처리
-        auth.logout();
-        return Promise.reject(error);
+        /**
+         * ✅ refresh로 access 재발급 요청
+         * BASE_URL이 /api/v1 이면 → /api/v1/auth/jwt/refresh/
+         * BASE_URL이 http://127.0.0.1:8000/api/v1 이면 → 해당 주소로 요청
+         */
+        const { data } = await refreshClient.post('/auth/jwt/refresh/', { refresh })
+
+        const newAccess = data.access
+
+        // ✅ 새 access 저장 (auth.login이 저장해주더라도, 여기서 한 번 더 보장해두면 안전)
+        localStorage.setItem('access', newAccess)
+
+        // ✅ 너의 기존 로직 유지: store에 로그인 상태 업데이트
+        auth.login(newAccess, refresh)
+
+        // ✅ 실패했던 요청을 새 access로 다시 시도
+        originalRequest.headers = originalRequest.headers || {}
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`
+
+        return api(originalRequest)
+      } catch (refreshError) {
+        // refresh도 실패 = refresh 만료 가능성 큼 → 로그아웃
+        auth.logout()
+        return Promise.reject(refreshError)
       }
     }
-    // 이외의 에러는 그대로 발생시킴
-    return Promise.reject(error);
+
+    return Promise.reject(error)
   }
 )
 
-export default api;
+export default api
