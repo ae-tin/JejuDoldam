@@ -16,6 +16,14 @@
 
         <RouterLink
           v-if="auth.isAuthenticated"
+          to="/community"
+          class="nav-link"
+        >
+          커뮤니티
+        </RouterLink>
+
+        <RouterLink
+          v-if="auth.isAuthenticated"
           to="/mypage"
           class="nav-link"
         >

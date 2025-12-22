@@ -24,4 +24,8 @@ urlpatterns = [
 
     # 카카오맵 장소 검색
     path("search/", views.KakaoPlaceSearchAPIView.as_view()),
+    
+    # 게시글 상세조회 시 루트 정보 조회
+    path("post/<int:route_pk>/", views.RouteDetailInPostAPIView.as_view()),
+    
 ]

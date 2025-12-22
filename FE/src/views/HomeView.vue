@@ -19,6 +19,7 @@
       <div class="actions">
         <RouterLink to="/routes/recommend" class="btn">루트 추천 받기</RouterLink>
         <RouterLink to="/mypage" class="btn">마이페이지</RouterLink>
+        <RouterLink to="/community" class="btn">커뮤니티</RouterLink>
       </div>
 
       <hr />

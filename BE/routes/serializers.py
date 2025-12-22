@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Route, RouteDay, RoutePlace
+from .utils import fetch_place_id
 
 
 class RouteSerializer(serializers.ModelSerializer):
@@ -9,7 +10,6 @@ class RouteSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
         # user 정보는 view에서 request.user로 넣기로 함
 
-
 class RoutePlaceSerializer(serializers.ModelSerializer):
     """
     일차(RouteDay)에 포함된 개별 장소 정보
@@ -17,8 +17,7 @@ class RoutePlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoutePlace
         fields = ["id", "order", "name", "address", "latitude", "longitude", "memo",]
-        read_only_fields = ["id", ]
-
+        read_only_fields = ["id",]
 
 class RouteDaySerializer(serializers.ModelSerializer):
     """
@@ -156,7 +155,6 @@ class RoutePlaceInputSerializer(serializers.Serializer):
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
     memo = serializers.CharField(required=False, allow_blank=True)
-
 
 class RouteDayInputSerializer(serializers.Serializer):
     """
