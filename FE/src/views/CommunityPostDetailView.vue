@@ -98,35 +98,28 @@
       </section>
 
       <section class="card story">
-        <div class="story-head">
-          <div>
-            <p class="mini-label">여행 이야기</p>
-            <h3>{{ post.title }}</h3>
-          </div>
-          <div class="story-stats">
-            <span>좋아요 {{ post.like_count }}</span>
-            <span>댓글 {{ post.writed_comments?.length ?? 0 }}</span>
-          </div>
-        </div>
+        <p class="mini-label">여행 이야기</p>
+        <h3 class="story-title">{{ post.title }}</h3>
         <div class="content">{{ post.content }}</div>
-      </section>
-
-      <section class="card reactions">
-        <button type="button" class="heart-btn" @click="toggleLike" :disabled="likeBusy">
-          <span class="sr-only">좋아요</span>
-          <span v-if="post.is_liked" class="heart filled">❤</span>
-          <span v-else class="heart empty">♡</span>
-        </button>
-        <div class="reaction-counts">
-          <span>좋아요 {{ post.like_count }}</span>
-          <span>댓글 {{ post.writed_comments?.length ?? 0 }}</span>
-        </div>
       </section>
 
       <section class="card comments">
         <div class="comment-head">
-          <h3>댓글</h3>
-          <span class="muted">{{ post.writed_comments?.length ?? 0 }}개</span>
+          <div class="comment-title">
+            <h3>댓글</h3>
+            <span class="muted">{{ commentCount }}개</span>
+          </div>
+          <div class="comment-actions">
+            <button type="button" class="heart-btn" @click="toggleLike" :disabled="likeBusy">
+              <span class="sr-only">좋아요</span>
+              <span v-if="post.is_liked" class="heart filled">❤</span>
+              <span v-else class="heart empty">♡</span>
+            </button>
+            <div class="reaction-counts">
+              <span>좋아요 {{ post.like_count }}</span>
+              <span>댓글 {{ commentCount }}</span>
+            </div>
+          </div>
         </div>
         <ul v-if="post.writed_comments?.length" class="comment-list">
           <li v-for="c in post.writed_comments" :key="c.id" class="comment">
@@ -174,6 +167,7 @@ const routeLoading = ref(false)
 const routeError = ref('')
 const selectedDayId = ref(null)
 const addBusy = ref(false)
+const commentCount = computed(() => post.value?.writed_comments?.length ?? 0)
 
 const formatDate = (iso) => {
   if (!iso) return '-'
@@ -352,10 +346,8 @@ watch(() => route.params.postId, fetchPost)
 .add-route { padding: 12px 18px; border-radius: 999px; border: none; background: linear-gradient(90deg, #2563eb, #3b82f6); color: #fff; font-weight: 800; cursor: pointer; box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25); }
 .add-route:disabled { opacity: 0.7; cursor: not-allowed; box-shadow: none; }
 .story { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
-.story-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.story-title { margin: 4px 0 0; }
 .content { white-space: pre-line; line-height: 1.7; color: #1f2937; font-size: 15px; }
-.story-stats { display: flex; gap: 12px; color: #6b7280; font-size: 14px; }
-.reactions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
 .heart-btn { width: 52px; height: 52px; border-radius: 50%; border: 1px solid #d1d5db; background: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .heart-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); }
 .heart { font-size: 24px; line-height: 1; }
@@ -363,7 +355,9 @@ watch(() => route.params.postId, fetchPost)
 .heart.empty { color: #9ca3af; }
 .reaction-counts { display: flex; gap: 12px; color: #4b5563; font-weight: 600; }
 .comments { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-.comment-head { display: flex; justify-content: space-between; align-items: center; }
+.comment-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.comment-title { display: flex; align-items: center; gap: 10px; }
+.comment-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .comment-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .comment { border: 1px solid #f3f4f6; border-radius: 12px; padding: 12px; background: #f9fafb; }
 .c-head { display: flex; justify-content: space-between; color: #6b7280; font-size: 13px; }
