@@ -67,7 +67,7 @@
         <!-- ✅ 장소 검색 → 선택한 장소를 현재 DAY에 추가 -->
         <KakaoPlaceSearch @select="addPlaceToSelectedDay" />
 
-        <ul class="placeList">
+        <!-- <ul class="placeList">
           <li v-for="(p, idx) in dayPlaces" :key="p._uid" class="placeItem">
             <div class="placeTop">
               <b>{{ p.order }}. {{ p.name }}</b>
@@ -91,6 +91,51 @@
             </div>
 
             <div class="placeAddr">{{ p.address || '주소 없음' }}</div>
+          </li>
+        </ul> -->
+        <br>
+        <p class="routeDesc"> 클릭시 사진이 나타나요! </p>
+        <ul class="placeList">
+          <li
+            v-for="(p, idx) in dayPlaces"
+            :key="p._uid"
+            class="placeItem"
+            @click="togglePlacePhoto(p)"
+          >
+            <div class="placeTop">
+              <b>{{ p.order }}. {{ p.name }}
+                <a v-if="p.place_url" class="link" :href="p.place_url" target="_blank" rel="noreferrer">
+                  링크
+                </a>
+              </b>
+
+              <div class="miniBtns" @click.stop>
+                <button type="button" class="mini" @click="movePlace(idx, -1)" :disabled="idx === 0">
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  class="mini"
+                  @click="movePlace(idx, 1)"
+                  :disabled="idx === dayPlaces.length - 1"
+                >
+                  ▼
+                </button>
+                <button type="button" class="mini danger" @click="removePlaceAt(idx)">
+                  삭제
+                </button>
+              </div>
+            </div>
+
+            <div class="placeAddr">{{ p.address || '주소 없음' }}</div>
+
+            <!-- ✅ 사진 표시 -->
+            <div
+              v-if="selectedPlaceUid === p._uid && p.photo_url"
+              class="placePhoto"
+            >
+              <img :src="p.photo_url" :alt="p.name" />
+            </div>
           </li>
         </ul>
 
@@ -247,6 +292,9 @@ function toEditableRoute(r) {
       address: p.address ?? '',
       latitude: p.latitude ?? null,
       longitude: p.longitude ?? null,
+      photo_url: p.photo_url ?? '',
+      place_url: p.place_url ?? '',
+      place_cat: p.place_cat ?? '',
       memo: p.memo ?? '',
     })
   }
@@ -283,6 +331,7 @@ function addPlaceToSelectedDay(place) {
     address: place.address ?? '',
     latitude: place.latitude ?? null,
     longitude: place.longitude ?? null,
+    place_url: place.place_url ?? '',
     memo: '',
   })
   normalizeOrders(dayObj)
@@ -389,6 +438,16 @@ function mapRouteToConfirmPayload(routeObj) {
   }
 }
 
+/**선택된 place uid (사진 표시용) */ 
+const selectedPlaceUid = ref(null)
+
+function togglePlacePhoto(place) {
+  selectedPlaceUid.value =
+    selectedPlaceUid.value === place._uid ? null : place._uid
+}
+
+
+
 /**
  * ✅ 실행 흐름(요청→처리→응답)
  * - 요청: 페이지 진입(onMounted) / query 변경(watch)
@@ -463,4 +522,16 @@ watch(
   font-weight: 600;
 }
 
+.placePhoto {
+  margin-top: 10px;
+}
+
+.placePhoto img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+.link { font-size: 12px; color:#2563eb; text-decoration:none; }
 </style>

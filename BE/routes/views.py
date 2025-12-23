@@ -17,8 +17,6 @@ from .serializers import (
     RouteRecommendInputSerializer2,
     RouteConfirmInputSerializer,
 )
-from pprint import pprint
-from .utils import fetch_place_id
 
 # Create your views here.
 
@@ -389,7 +387,7 @@ class RouteRecommendAPIView(APIView):
         #    }
         ####################################
         # print('*'*30,"성공",'*'*30)
-        print(ai_result["result"][0])  # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        # print(ai_result["result"][0])  # 여러개 추천 중 첫번째만 출력(성공 확인용)
         # print('*'*30,"성공",'*'*30)
         return self.parse_route_data(routes)
 
@@ -437,6 +435,9 @@ class RouteRecommendAPIView(APIView):
                     "address": route["ADDRESS_FULL"][day],
                     "latitude": route["Y_COORD"][day],
                     "longitude": route["X_COORD"][day],
+                    "place_url": route["PLACE_URL"][day],
+                    "place_cat": route["PLACE_CAT"][day],
+                    "photo_url": route["PHOTO_URL"][day],
                     "memo": "",
                 }
                 # 장소 삽입
@@ -573,21 +574,26 @@ class KakaoPlaceSearchAPIView(APIView):
         docs = r.json().get("documents", [])
         results = []
         for d in docs:
-            results.append({
-                "id": d.get("id"),
-                "name": d.get("place_name"),
-                "address": d.get("road_address_name") or d.get("address_name") or "",
-                "latitude": float(d["y"]) if d.get("y") else None,
-                "longitude": float(d["x"]) if d.get("x") else None,
-                "place_url": d.get("place_url") or "",
-            })
+            results.append(
+                {
+                    "id": d.get("id"),
+                    "name": d.get("place_name"),
+                    "address": d.get("road_address_name")
+                    or d.get("address_name")
+                    or "",
+                    "latitude": float(d["y"]) if d.get("y") else None,
+                    "longitude": float(d["x"]) if d.get("x") else None,
+                    "place_url": d.get("place_url") or "",
+                }
+            )
         return Response(results)
-    
-    
+
+
 class RouteDetailInPostAPIView(APIView):
     """
     게시글 상세조회 시에만 다른 사람의 루트를 상세조회 할 수 있도록 반환
     """
+
     def get(self, request, route_pk):
         """
         로그인한 사용자의 루트를 상세조회하는 함수
