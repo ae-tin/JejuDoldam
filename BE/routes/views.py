@@ -389,7 +389,7 @@ class RouteRecommendAPIView(APIView):
         #    }
         ####################################
         # print('*'*30,"성공",'*'*30)
-        # pprint(ai_result["result"][0]) # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        print(ai_result["result"][0])  # 여러개 추천 중 첫번째만 출력(성공 확인용)
         # print('*'*30,"성공",'*'*30)
         return self.parse_route_data(routes)
 
