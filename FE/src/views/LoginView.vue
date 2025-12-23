@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card fade-in">
       <div class="text-center mb-6">
-        <h1 class="logo-text" @click="router.push('/')">MyTrip</h1>
+        <h1 class="logo-text" @click="router.push('/')">JejuDoldam</h1>
         <h2 class="welcome-text">다시 만나서 반가워요! 👋</h2>
         <p class="sub-text">나만의 여행 계획을 확인해보세요.</p>
       </div>
