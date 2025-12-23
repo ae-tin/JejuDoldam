@@ -121,4 +121,4 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             self.fields["route"].queryset = Route.objects.filter(user=request.user)
 
-    
+
