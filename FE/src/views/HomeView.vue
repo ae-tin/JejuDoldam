@@ -68,10 +68,27 @@
 
           <div v-else-if="routes.length" class="route-grid">
             <div v-for="r in recentRoutes" :key="r.id" class="route-card" @click="detailRoutes(r.id)">
-              <div class="route-card-img"><span class="route-tag">Saved</span></div>
+              <!-- <div class="route-card-img"><span class="route-tag">Saved</span></div>
               <div class="route-card-body">
                 <h4 class="route-title">{{ r.title }}</h4>
                 <p class="route-desc">{{ r.description || '설명 없는 여행' }}</p>
+                <div class="route-meta">
+                  <span>#{{ r.id }}</span>
+                  <span>{{ r.created_at.slice(0, 10) }}</span>
+                </div>
+              </div> -->
+              <div
+                class="route-card-img"
+                :class="{ 'recommend-gradient': !r.places[0].photo_url }"
+                :style="r.places[0].photo_url ? bgStyle(r.places[0].photo_url) : {}"
+              >
+                <span class="route-tag">Saved</span>
+              </div>
+
+              
+              <div class="route-card-body">
+                <h4 class="route-title">{{ r.title }}</h4>
+                <p class="route-desc">{{ r.description || '설명 없는 여행'}}</p>
                 <div class="route-meta">
                   <span>#{{ r.id }}</span>
                   <span>{{ r.created_at.slice(0, 10) }}</span>
@@ -102,20 +119,30 @@
               class="route-card"
               @click="detailRoutes(r.id)"
             >
-              <div class="route-card-img recommend-gradient">
+              <!-- <div class="route-card-img recommend-gradient">
+                <span v-if="r.is_hot" class="route-tag hot">HOT 🔥</span>
+                <span v-else class="route-tag recommend">AI Pick</span>
+              </div> -->
+              <div
+                class="route-card-img"
+                :class="{ 'recommend-gradient': !r.places[0].photo_url }"
+                :style="r.places[0].photo_url ? bgStyle(r.places[0].photo_url) : {}"
+              >
                 <span v-if="r.is_hot" class="route-tag hot">HOT 🔥</span>
                 <span v-else class="route-tag recommend">AI Pick</span>
               </div>
+
               
               <div class="route-card-body">
                 <h4 class="route-title">{{ r.title }}</h4>
                 <p class="route-desc">{{ r.description }}</p>
-                <div class="route-meta">
+                <!-- <div class="route-meta">
                   <span>조회수 1.2k</span> <span>{{ r.created_at }}</span>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
+
         </section>
       </div>
     </div>
@@ -135,35 +162,15 @@ const router = useRouter()
 const me = ref(null)
 const routes = ref([])
 const recentRoutes = computed(() => routes.value.slice(0, 3))
+console.log(recentRoutes)
 const loading = ref(false)
 const error = ref('')
+
 
 // ... 기존 import 문들 아래에 ...
 
 // [추가] 추천 루트 데이터 (나중에 API 연결 시 빈 배열로 바꾸고 fetch 로직 넣으세요)
-const recommendedRoutes = ref([
-  { 
-    id: 101, 
-    title: '제주도 3박 4일 힐링 코스 🍊', 
-    description: '서귀포 바다를 보며 멍때리기 좋은 카페 투어', 
-    created_at: '2025-01-15', 
-    is_hot: true // 뱃지용 플래그
-  },
-  { 
-    id: 102, 
-    title: '부산 식도락 완전 정복 🌊', 
-    description: '국밥부터 밀면까지, 쉴 틈 없이 먹는 일정', 
-    created_at: '2025-01-20',
-    is_hot: true 
-  },
-  { 
-    id: 103, 
-    title: '경주 야경 산책 🌙', 
-    description: '첨성대와 동궁과 월지, 밤에 더 빛나는 경주', 
-    created_at: '2025-02-01', 
-    is_hot: false 
-  }
-])
+const recommendedRoutes = ref([])
 
 // ... 기존 onMounted 등 ...
 
@@ -174,38 +181,93 @@ const detailRoutes = (routeId) => {
   router.push({ name: "route-detail", params: { routeId: routeId } })
 }
 
+// route recommend data api 호출
+async function fetchRecommendedRoutes() {
+  try {
+    const { data } = await api.get('/routes/recommend/')
+    recommendedRoutes.value = data || []
+    console.log(recommendedRoutes)
+  } catch (e) {
+    console.error('추천 루트 로딩 실패', e)
+    recommendedRoutes.value = []
+  }
+}
+
+const bgStyle = (url) => ({
+  backgroundImage: `url(${url})`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+})
+
+
 onMounted(async () => {
-  // Intersection Observer (애니메이션)
+  // 기존 observer 로직 유지
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible')
       }
-    });
-  }, { threshold: 0.1 });
+    })
+  }, { threshold: 0.1 })
 
-  document.querySelectorAll('.fade-element').forEach(el => observer.observe(el));
+  document.querySelectorAll('.fade-element').forEach(el => observer.observe(el))
 
-  // 데이터 로딩 (로그인 시에만)
-  if (!auth.isAuthenticated) return
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    const [meRes, routesRes] = await Promise.all([
-      api.get('/auth/me/'),
-      api.get('/routes/'),
-    ])
-    me.value = meRes.data
-    routes.value = routesRes.data
-  } catch (e) {
-    console.error(e)
-    error.value = '데이터를 불러오지 못했습니다.'
-  } finally {
-    loading.value = false
+  // 로그인 사용자 데이터
+  if (auth.isAuthenticated) {
+    loading.value = true
+    try {
+      const [meRes, routesRes] = await Promise.all([
+        api.get('/auth/me/'),
+        api.get('/routes/'),
+      ])
+      me.value = meRes.data
+      routes.value = routesRes.data
+    } catch (e) {
+      console.error(e)
+      error.value = '데이터를 불러오지 못했습니다.'
+    } finally {
+      loading.value = false
+    }
   }
+
+  // ✅ 추천 루트 API 호출 (로그인 여부 무관)
+  fetchRecommendedRoutes()
 })
+
+
+// onMounted(async () => {
+//   // Intersection Observer (애니메이션)
+//   observer = new IntersectionObserver((entries) => {
+//     entries.forEach((entry) => {
+//       if (entry.isIntersecting) {
+//         entry.target.classList.add('visible')
+//       }
+//     });
+//   }, { threshold: 0.1 });
+
+//   document.querySelectorAll('.fade-element').forEach(el => observer.observe(el));
+
+//   // 데이터 로딩 (로그인 시에만)
+//   if (!auth.isAuthenticated) return
+
+//   loading.value = true
+//   error.value = ''
+
+//   try {
+//     const [meRes, routesRes] = await Promise.all([
+//       api.get('/auth/me/'),
+//       api.get('/routes/'),
+//     ])
+//     me.value = meRes.data
+//     routes.value = routesRes.data
+//   } catch (e) {
+//     console.error(e)
+//     error.value = '데이터를 불러오지 못했습니다.'
+//   } finally {
+//     loading.value = false
+//   }
+// })
 
 onUnmounted(() => {
   if (observer) observer.disconnect()
