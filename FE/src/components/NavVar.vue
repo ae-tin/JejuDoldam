@@ -26,7 +26,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const isScrolled = ref(false)
 
-// 스크롤 감지 로직 (네브바 배경 투명 -> 흰색 변경용)
+// 스크롤 감지 로직
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 30
 }
@@ -46,11 +46,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 네브바 전체 컨테이너 */
 .navbar {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 60px;
-  background-color: transparent; /* 초기엔 투명 */
+  background-color: transparent;
   border-bottom: 1px solid transparent;
   z-index: 1000;
   display: flex;
@@ -58,7 +59,7 @@ onUnmounted(() => {
   transition: all 0.3s ease-in-out;
 }
 
-/* 스크롤 되었을 때 스타일 */
+/* 스크롤 시 스타일 변경 */
 .navbar.scrolled {
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(5px);
@@ -66,17 +67,26 @@ onUnmounted(() => {
   border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
+/* [수정됨] 내부 컨텐츠 영역 
+  - max-width: 1024px; 제거 -> 화면 전체 너비 사용
+  - justify-content: space-between; -> 요소들을 양쪽 끝으로 밀어냄
+*/
 .nav-content {
-  width: 100%; max-width: 1024px;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0 20px;
+  width: 100%;
+  /* max-width: 1024px;  <-- 이 부분을 삭제하여 너비 제한을 풀었습니다 */
+  display: flex; 
+  justify-content: space-between; /* 양쪽 끝 정렬 */
+  align-items: center;
+  padding: 0 40px; /* 양쪽 여백을 조금 더 넉넉하게 줌 (20px -> 40px) */
 }
 
+/* 로고 스타일 */
 .logo { 
   font-weight: 800; font-size: 1.4rem; color: #2cb398; 
   text-decoration: none; cursor: pointer; 
 }
 
+/* 오른쪽 메뉴 그룹 */
 .nav-actions { display: flex; align-items: center; gap: 20px; }
 
 .nav-link { 
@@ -96,6 +106,7 @@ onUnmounted(() => {
 
 /* 모바일 반응형 */
 @media (max-width: 768px) {
-  .nav-actions { display: none; /* 모바일 메뉴는 생략 or 햄버거 메뉴로 대체 */ }
+  .nav-content { padding: 0 20px; } /* 모바일에서는 여백 줄임 */
+  .nav-actions { display: none; }
 }
 </style>

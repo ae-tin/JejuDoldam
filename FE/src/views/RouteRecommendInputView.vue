@@ -1,172 +1,177 @@
 <template>
   <div class="page-container">
     
+    <div class="bg-decoration circle-1"></div>
+    <div class="bg-decoration circle-2"></div>
+
     <header class="header-section fade-in-up">
-      <h1 class="title">AI와 함께하는 제주 여행 🍊</h1>
-      <p class="subtitle">
-        취향을 선택해주시면 <b>딱 맞는 여행 코스</b>를 만들어드려요.
-      </p>
+      <div class="title-group">
+        <span class="sub-badge">AI TRAVEL PLANNER</span>
+        <h1 class="title">제주 여행, <span>AI</span>가 설계해드려요</h1>
+        <p class="subtitle">
+          복잡한 계획은 그만! 취향만 알려주시면 <b>최적의 동선</b>을 만들어 드립니다.
+        </p>
+      </div>
     </header>
 
     <div class="grid-layout fade-in-up delay-1">
       
       <section class="step-card wide-card">
-        <div class="step-header centered-header">
-          <div class="badge-row">
-            <span class="step-badge">STEP 1</span>
+        <div class="card-content-wrapper">
+          <div class="step-info">
+            <span class="step-number">01</span>
+            <h3 class="step-title">일정 선택</h3>
+            <p class="step-desc">제주에 며칠 동안 머무르시나요?</p>
           </div>
-          <h2 class="question">제주에 얼마나 머무르시나요?</h2>
-          <p class="hint">1일 ~ 7일 중 선택</p>
-        </div>
-        
-        <div class="options-wrapper days-wrapper">
-          <button
-            v-for="d in howLongOptions"
-            :key="d"
-            type="button"
-            class="option-pill circle-pill"
-            :class="{ active: form.HOW_LONG === d }"
-            @click="form.HOW_LONG = d"
-          >
-            <span class="day-num">{{ d }}</span>
-            <span class="day-text">일</span>
-          </button>
+          
+          <div class="options-grid days-grid">
+            <button
+              v-for="d in howLongOptions"
+              :key="d"
+              type="button"
+              class="selection-card day-card"
+              :class="{ active: form.HOW_LONG === d }"
+              @click="form.HOW_LONG = d"
+            >
+              <span class="day-label">{{ d }}일</span>
+              <span class="day-sub" v-if="d === 1">당일치기</span>
+              <span class="day-sub" v-else>{{ d-1 }}박 {{ d }}일</span>
+            </button>
+          </div>
         </div>
       </section>
 
       <section class="step-card wide-card">
-        <div class="step-header centered-header">
-          <div class="badge-row">
-            <span class="step-badge">STEP 2</span>
-          </div>
-          <h2 class="question">선호하는 여행 스타일은?</h2>
-          <p class="hint">자연 속 힐링 vs 도심 속 핫플레이스</p>
-        </div>
-        
-        <div class="style-slider-container">
-          <div class="style-labels">
-            <span>🌿 자연 선호</span>
-            <span>중립</span>
-            <span>도시 선호 🏙️</span>
+        <div class="card-content-wrapper">
+          <div class="step-info">
+            <span class="step-number">02</span>
+            <h3 class="step-title">여행 스타일</h3>
+            <p class="step-desc">자연 속 힐링인가요, 도심 속 핫플인가요?</p>
           </div>
           
-          <div class="style-track">
-            <button
-              v-for="o in styleOptions"
-              :key="o.value"
-              type="button"
-              class="style-node"
-              :class="{ active: form.TRAVEL_STYL_1 === o.value }"
-              @click="form.TRAVEL_STYL_1 = o.value"
-              :title="o.label"
-            >
-              <span class="node-label" :class="{ show: form.TRAVEL_STYL_1 === o.value }">
-                {{ o.label }}
-              </span>
-            </button>
-            <div class="track-line"></div>
+          <div class="slider-area">
+            <div class="visual-labels">
+              <div class="label-box nature" :class="{ on: form.TRAVEL_STYL_1 <= 3 }">
+                <span class="icon">🌿</span>
+                <strong>자연 힐링</strong>
+              </div>
+              <div class="label-box city" :class="{ on: form.TRAVEL_STYL_1 >= 5 }">
+                <span class="icon">🏙️</span>
+                <strong>도시 핫플</strong>
+              </div>
+            </div>
+            
+            <div class="style-track">
+              <div class="track-bg"></div>
+              <div class="track-fill" :style="{ width: ((form.TRAVEL_STYL_1 - 1) / 6 * 100) + '%' }"></div>
+              
+              <button
+                v-for="o in styleOptions"
+                :key="o.value"
+                type="button"
+                class="style-point"
+                :class="{ active: form.TRAVEL_STYL_1 === o.value }"
+                @click="form.TRAVEL_STYL_1 = o.value"
+                :style="{ left: ((o.value - 1) / 6 * 100) + '%' }"
+              >
+                <div class="tooltip">{{ o.label }}</div>
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="step-card">
-        <div class="step-header">
-          <div class="badge-row">
-            <span class="step-badge">STEP 3</span>
-          </div>
-          <h2 class="question">여행의 주된 목적은?</h2>
-          <p class="hint">가장 중요한 이유 하나</p>
+        <div class="step-header-simple">
+          <span class="step-number-small">03</span>
+          <h3 class="step-title-small">여행의 주된 목적</h3>
         </div>
-        <div class="options-wrapper motive-grid">
+        
+        <div class="options-grid motive-grid">
           <button
-            v-for="m in motiveOptions"
+            v-for="(m, idx) in motiveOptions"
             :key="m"
             type="button"
-            class="option-pill"
+            class="selection-card box-card"
             :class="{ active: form.TRAVEL_MOTIVE_1 === m }"
             @click="form.TRAVEL_MOTIVE_1 = m"
           >
-            {{ m }}
+            <span class="card-icon">{{ getMotiveIcon(idx) }}</span>
+            <span class="card-text">{{ m }}</span>
           </button>
         </div>
       </section>
 
       <section class="step-card">
-        <div class="step-header">
-          <div class="badge-row">
-            <span class="step-badge">STEP 4</span>
-          </div>
-          <h2 class="question">누구와 함께인가요?</h2>
-          <p class="hint">동반자 유형 선택</p>
+        <div class="step-header-simple">
+          <span class="step-number-small">04</span>
+          <h3 class="step-title-small">동반자 유형</h3>
         </div>
-        <div class="options-wrapper">
+        
+        <div class="options-grid accompany-grid">
           <button
-            v-for="c in accompanyOptions"
+            v-for="(c, idx) in accompanyOptions"
             :key="c"
             type="button"
-            class="option-pill"
+            class="selection-card box-card"
             :class="{ active: form.TRAVEL_STATUS_ACCOMPANY === c }"
             @click="form.TRAVEL_STATUS_ACCOMPANY = c"
           >
-            {{ c }}
+            <span class="card-icon">{{ getAccompanyIcon(idx) }}</span>
+            <span class="card-text">{{ c }}</span>
           </button>
         </div>
       </section>
 
     </div>
 
-    <div class="action-section fade-in-up delay-2">
-      <p v-if="submitError" class="error-msg">⚠️ {{ submitError }}</p>
-      
-      <button 
-        class="submit-btn" 
-        type="button" 
-        @click="goRecommend" 
-        :disabled="!canSubmit"
-      >
-        <span v-if="canSubmit">AI 맞춤 일정 생성하기 ✨</span>
-        <span v-else>모든 항목을 선택해주세요</span>
-      </button>
+    <div class="action-bar fade-in-up delay-2">
+      <div class="action-content">
+        <div class="status-msg">
+          <span v-if="canSubmit" class="ready">✨ 모든 준비가 완료되었어요!</span>
+          <span v-else class="not-ready">👉 아직 선택하지 않은 항목이 있어요</span>
+          <p v-if="submitError" class="error-text">{{ submitError }}</p>
+        </div>
+        <button 
+          class="submit-btn-lg" 
+          type="button" 
+          @click="goRecommend" 
+          :disabled="!canSubmit"
+        >
+          AI 일정 생성하기
+          <span class="arrow">→</span>
+        </button>
+      </div>
     </div>
 
   </div>
 </template>
 
 <script setup>
-/**
- * [Vue 3 Composition API]
- * - reactive: 객체 형태의 반응형 상태를 선언할 때 사용합니다. (폼 데이터용)
- * - computed: 종속된 데이터가 변할 때마다 자동으로 다시 계산되는 값입니다. (유효성 검사용)
- * - ref: 단일 값(숫자, 문자열 등)의 반응형 상태를 선언할 때 사용합니다. (에러 메시지용)
- */
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const submitError = ref('')
 
-// --- [Form 데이터 상태 관리] ---
-// 주의: 백엔드 API(Serializer2)가 요구하는 필드명(대문자 포함)을 
-// 절대 변경하면 안 됩니다. 화면에 어떻게 보이든 데이터 키값은 유지해야 합니다.
+// [데이터 유지]
 const form = reactive({
-  TRAVEL_STYL_1: 4,        // 여행 스타일 (1:자연 ~ 7:도시), 기본값 4(중립)
-  TRAVEL_STATUS_ACCOMPANY: '', // 동반자 (문자열)
-  TRAVEL_MOTIVE_1: '',     // 여행 동기 (문자열)
-  HOW_LONG: 3,             // 여행 기간 (1~7일), 기본값 3
+  TRAVEL_STYL_1: 4,
+  TRAVEL_STATUS_ACCOMPANY: '',
+  TRAVEL_MOTIVE_1: '',
+  HOW_LONG: 3,
 })
 
-// --- [선택지 데이터 (상수)] ---
-// 화면 렌더링을 위한 배열 데이터입니다.
 const howLongOptions = [1, 2, 3, 4, 5, 6, 7]
 
 const styleOptions = [
-  { value: 1, label: '자연 매우선호' },
-  { value: 2, label: '자연 중간선호' },
-  { value: 3, label: '자연 약간선호' },
-  { value: 4, label: '중립' },
-  { value: 5, label: '도시 약간선호' },
-  { value: 6, label: '도시 중간선호' },
-  { value: 7, label: '도시 매우선호' },
+  { value: 1, label: '완전 자연' },
+  { value: 2, label: '자연 위주' },
+  { value: 3, label: '자연 약간' },
+  { value: 4, label: '반반' },
+  { value: 5, label: '도시 약간' },
+  { value: 6, label: '도시 위주' },
+  { value: 7, label: '완전 도시' },
 ]
 
 const accompanyOptions = [
@@ -192,31 +197,32 @@ const motiveOptions = [
   '기타',
 ]
 
-// --- [유효성 검사 (Computed)] ---
-// 사용자가 폼을 조작할 때마다 실시간으로 이 함수가 실행되어 
-// 버튼 활성화 여부(true/false)를 결정합니다.
+// [UI 꾸미기용 아이콘 매핑 함수 (로직 영향 X)]
+const getMotiveIcon = (idx) => {
+  const icons = ['🏃', '🍃', '🤝', '🧘', '📸', '💪', '🔥', '🎓', '🎉', '🎸']
+  return icons[idx] || '✨'
+}
+
+const getAccompanyIcon = (idx) => {
+  const icons = ['🎒', '👫', '👨‍👩‍👧‍👦', '💑', '👶', '👵', '🚌']
+  return icons[idx] || '✈️'
+}
+
 const canSubmit = computed(() => {
   return (
-    Number.isFinite(form.HOW_LONG) && form.HOW_LONG >= 1 && form.HOW_LONG <= 7 &&
-    Number.isFinite(form.TRAVEL_STYL_1) && form.TRAVEL_STYL_1 >= 1 && form.TRAVEL_STYL_1 <= 7 &&
-    !!form.TRAVEL_STATUS_ACCOMPANY && // 빈 문자열 체크
-    !!form.TRAVEL_MOTIVE_1            // 빈 문자열 체크
+    Number.isFinite(form.HOW_LONG) &&
+    Number.isFinite(form.TRAVEL_STYL_1) &&
+    !!form.TRAVEL_STATUS_ACCOMPANY &&
+    !!form.TRAVEL_MOTIVE_1
   )
 })
 
-// --- [페이지 이동 함수] ---
 function goRecommend() {
   submitError.value = ''
-
-  // 한 번 더 방어 코드: 필수 값이 없으면 함수 종료
   if (!canSubmit.value) {
-    submitError.value = '필수 항목(여행기간/여행스타일/여행동기/동반현황)을 확인해주세요.'
+    submitError.value = '필수 항목을 모두 선택해주세요.'
     return
   }
-
-  // 결과 페이지로 이동하면서 입력받은 데이터를 Query String으로 넘깁니다.
-  // 예: /recommend/result?HOW_LONG=3&TRAVEL_STYL_1=4...
-  // 이렇게 해야 결과 페이지에서 새로고침해도 입력값이 유지됩니다.
   router.push({
     name: 'route-recommend-results',
     query: {
@@ -230,202 +236,255 @@ function goRecommend() {
 </script>
 
 <style scoped>
-/* [스타일링 전략: PC 중심의 Wide Layout]
-  - max-width: 1200px 설정으로 대화면 모니터에서도 안정감 있게 보입니다.
-  - Grid Layout을 활용해 2열 배치를 기본으로 하되, 
-    미디어 쿼리(@media)를 통해 모바일에서는 1열로 자동 전환합니다.
-*/
-
-/* 페이지 전체 래퍼 */
+/* [PC 최적화: 데스크톱 앱 스타일] */
 .page-container {
-  max-width: 1200px; 
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 60px 20px 100px; /* 상단 여백 넉넉히, 하단 버튼 공간 확보 */
-  background-color: #f5f7fa; /* 아주 연한 회색 배경 */
+  padding: 80px 20px 140px; /* 하단 액션바 공간 확보 */
+  background-color: #f8f9fa;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden; /* 배경 장식 잘림 처리 */
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", Roboto, sans-serif;
 }
 
-/* 헤더 텍스트 */
+/* 배경 장식 (은은한 원형) */
+.bg-decoration {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.4;
+}
+.circle-1 { top: -100px; right: -100px; width: 500px; height: 500px; background: #d1fae5; }
+.circle-2 { bottom: 100px; left: -100px; width: 400px; height: 400px; background: #e0f2fe; }
+
+/* 1. 헤더 (타이포그래피 강화) */
 .header-section {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 60px;
+  position: relative;
+  z-index: 1;
+}
+.sub-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #2cb398;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  background: rgba(44, 179, 152, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
 }
 .title {
-  font-size: 2.5rem; 
-  font-weight: 800;
-  color: #222;
+  font-size: 3rem;
+  font-weight: 900;
+  color: #111;
   margin-bottom: 16px;
   letter-spacing: -0.03em;
 }
+.title span { color: #2cb398; }
 .subtitle {
   font-size: 1.1rem;
-  color: #666;
+  color: #555;
   line-height: 1.6;
 }
-.subtitle b { color: #2cb398; }
 
-/* [CSS Grid Layout]
-  - grid-template-columns: repeat(2, 1fr); -> 화면을 정확히 반반(1:1)으로 나눕니다.
-  - gap: 24px; -> 카드 사이의 간격을 띄웁니다.
-*/
+/* 2. 그리드 레이아웃 */
 .grid-layout {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 24px;
-  margin-bottom: 60px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  position: relative;
+  z-index: 1;
 }
 
-/* [카드 컴포넌트 스타일]
-  - 흰색 배경에 둥근 모서리, 그리고 은은한 그림자(box-shadow)를 주어
-    배경 위로 떠 있는 듯한 입체감을 줍니다.
-*/
+/* 카드 공통 스타일 (박스형 + 부드러운 그림자) */
 .step-card {
   background: white;
   border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.03);
   border: 1px solid rgba(0,0,0,0.02);
+  transition: transform 0.3s ease;
+}
+.step-card:hover { transform: translateY(-5px); box-shadow: 0 15px 50px rgba(0,0,0,0.06); }
+.wide-card { grid-column: span 2; }
+
+/* 카드 내부 헤더 (좌측 정보 + 우측 컨텐츠 구조) */
+.card-content-wrapper {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+.step-info {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid #f0f0f0;
+  padding-right: 20px;
+}
+.step-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #e0e0e0;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+}
+.step-title { font-size: 1.5rem; font-weight: 800; margin: 0 0 8px; color: #222; }
+.step-desc { font-size: 0.95rem; color: #888; margin: 0; line-height: 1.4; }
+
+/* STEP 3, 4용 심플 헤더 */
+.step-header-simple {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f5f5f5;
+}
+.step-number-small {
+  font-size: 1.1rem; font-weight: 800; color: #2cb398;
+  background: #e6f7f4; padding: 4px 10px; border-radius: 8px;
+}
+.step-title-small { font-size: 1.3rem; font-weight: 800; color: #333; margin: 0; }
+
+
+/* --- [STEP 1: 캘린더 스타일 날짜 선택] --- */
+.options-grid.days-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex: 1;
+}
+.selection-card {
+  border: 2px solid #f0f0f0;
+  background: #fff;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-
-/* [Wide Card 유틸리티 클래스]
-  - grid-column: span 2; -> 그리드의 2칸을 혼자 다 차지하게 만듭니다.
-  - STEP 1, STEP 2 처럼 가로로 넓게 보여줘야 할 때 사용합니다.
-*/
-.wide-card {
-  grid-column: span 2;
+.day-card {
+  width: 80px; height: 90px;
 }
+.day-label { font-size: 1.3rem; font-weight: 800; color: #333; }
+.day-sub { font-size: 0.75rem; color: #999; margin-top: 4px; }
 
-/* 카드 내부 헤더 */
-.step-header { margin-bottom: 24px; text-align: left; }
-.centered-header { text-align: center; } /* wide-card일 때는 중앙 정렬 */
-
-.badge-row { margin-bottom: 12px; }
-.step-badge {
-  font-size: 0.85rem; font-weight: 800; color: #2cb398;
-  background: #e6f7f4; padding: 6px 10px; border-radius: 8px;
+.selection-card:hover { border-color: #2cb398; background: #f0fdfa; }
+.selection-card.active {
+  border-color: #2cb398;
+  background: #2cb398;
+  box-shadow: 0 8px 20px rgba(44, 179, 152, 0.3);
+  transform: scale(1.05);
 }
-.question { font-size: 1.5rem; font-weight: 700; color: #333; margin: 0 0 6px; }
-.hint { font-size: 0.95rem; color: #999; margin: 0; }
+.selection-card.active * { color: white; }
 
-/* 옵션 버튼들을 감싸는 컨테이너 */
-.options-wrapper {
-  display: flex;
-  flex-wrap: wrap; /* 공간이 부족하면 자동으로 줄바꿈 */
-  gap: 12px;
+
+/* --- [STEP 2: 고급 슬라이더] --- */
+.slider-area { flex: 1; padding: 0 20px; }
+.visual-labels {
+  display: flex; justify-content: space-between; margin-bottom: 30px;
 }
-
-/* 날짜 선택 버튼 래퍼 (중앙 정렬) */
-.days-wrapper { 
-  justify-content: center; 
-  gap: 20px; 
+.label-box {
+  display: flex; flex-direction: column; align-items: center; opacity: 0.4; transition: opacity 0.3s;
 }
+.label-box.on { opacity: 1; }
+.label-box .icon { font-size: 2rem; margin-bottom: 6px; }
+.label-box strong { font-size: 0.9rem; color: #333; }
 
-/* [기본 알약(Pill) 버튼 스타일]
-  - transition 속성으로 마우스 호버나 활성화 시 부드럽게 색이 변하도록 합니다.
-*/
-.option-pill {
-  padding: 14px 24px;
-  background-color: #f8f9fa;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  font-size: 1rem;
-  color: #555;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
+.style-track { position: relative; height: 40px; display: flex; align-items: center; }
+.track-bg {
+  position: absolute; top: 50%; left: 0; right: 0; height: 8px;
+  background: #eee; border-radius: 4px; transform: translateY(-50%);
 }
-.option-pill:hover { background-color: #edf2f7; transform: translateY(-2px); }
-/* 선택되었을 때 (.active) 민트색으로 강조 */
-.option-pill.active {
-  background-color: #2cb398; color: white; border-color: #2cb398;
-  font-weight: 700; 
-  box-shadow: 0 4px 12px rgba(44, 179, 152, 0.3);
-  transform: translateY(-2px);
+.track-fill {
+  position: absolute; top: 50%; left: 0; height: 8px;
+  background: #2cb398; border-radius: 4px; transform: translateY(-50%);
+  transition: width 0.3s ease;
 }
-
-/* STEP 1용 원형 버튼 */
-.circle-pill {
-  width: 74px; height: 74px; /* 정사각형 */
-  border-radius: 50%; /* 완전한 원 */
-  padding: 0;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
+.style-point {
+  position: absolute; top: 50%; width: 24px; height: 24px;
+  background: #fff; border: 4px solid #ddd; border-radius: 50%;
+  transform: translate(-50%, -50%); cursor: pointer; transition: all 0.2s;
+  z-index: 2;
 }
-.day-num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
-.day-text { font-size: 0.85rem; margin-top: 2px; }
+.style-point:hover { transform: translate(-50%, -50%) scale(1.2); }
+.style-point.active {
+  background: #2cb398; border-color: #2cb398;
+  width: 32px; height: 32px;
+  box-shadow: 0 0 0 5px rgba(44, 179, 152, 0.2);
+}
+.tooltip {
+  position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+  background: #333; color: white; padding: 4px 10px; border-radius: 6px;
+  font-size: 0.8rem; white-space: nowrap; opacity: 0; transition: 0.2s;
+  pointer-events: none;
+}
+.style-point.active .tooltip, .style-point:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(-5px); }
 
-/* STEP 2용 스타일 슬라이더 UI */
-.style-slider-container { padding: 20px 10px; }
-.style-labels { display: flex; justify-content: space-between; font-size: 0.9rem; color: #888; margin-bottom: 12px; font-weight: 600; }
 
-.style-track {
-  position: relative;
+/* --- [STEP 3 & 4: 박스형 그리드] --- */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* 반응형 그리드 */
+  gap: 16px;
+}
+.box-card {
+  padding: 20px 10px;
+  height: 110px; /* 카드 높이 고정 */
+}
+.card-icon { font-size: 2rem; margin-bottom: 10px; }
+.card-text { font-size: 0.95rem; font-weight: 600; color: #555; text-align: center; }
+
+
+/* --- [하단 액션 바] --- */
+.action-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white; border-top: 1px solid #eee;
+  padding: 20px 0; z-index: 100;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+}
+.action-content {
+  max-width: 1200px; margin: 0 auto; padding: 0 20px;
   display: flex; justify-content: space-between; align-items: center;
-  height: 60px;
 }
-/* 슬라이더 배경 선 */
-.track-line {
-  position: absolute; top: 50%; left: 10px; right: 10px; height: 4px;
-  background: #eee; z-index: 1; border-radius: 2px;
-}
-/* 슬라이더 노드(점) */
-.style-node {
-  width: 24px; height: 24px; border-radius: 50%;
-  background: white; border: 4px solid #ddd;
-  z-index: 2; cursor: pointer; position: relative; transition: all 0.2s;
-  padding: 0;
-}
-.style-node:hover { transform: scale(1.2); border-color: #aaa; }
-.style-node.active {
-  background: #2cb398; border-color: #2cb398; transform: scale(1.3);
-  box-shadow: 0 0 0 4px rgba(44, 179, 152, 0.2);
-}
-/* 노드 선택 시 뜨는 말풍선 */
-.node-label {
-  position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
-  background: #333; color: white; padding: 4px 8px; border-radius: 6px;
-  font-size: 0.8rem; white-space: nowrap; opacity: 0; transition: opacity 0.2s; pointer-events: none;
-}
-.node-label.show { opacity: 1; }
+.status-msg { font-size: 0.95rem; font-weight: 600; }
+.ready { color: #2cb398; }
+.not-ready { color: #888; }
+.error-text { color: #e74c3c; font-size: 0.8rem; margin-top: 4px; }
 
-/* 하단 버튼 섹션 */
-.action-section { text-align: center; margin-top: 40px; }
-.submit-btn {
-  padding: 20px 60px; font-size: 1.2rem; font-weight: 800; color: white;
-  background-color: #2cb398; border: none; border-radius: 16px; cursor: pointer;
-  transition: all 0.2s; box-shadow: 0 10px 25px rgba(44, 179, 152, 0.4);
+.submit-btn-lg {
+  padding: 16px 40px; font-size: 1.1rem; font-weight: 800; color: white;
+  background-color: #2cb398; border: none; border-radius: 12px;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
 }
-.submit-btn:hover:not(:disabled) {
-  background-color: #24917d; transform: translateY(-3px);
-  box-shadow: 0 15px 30px rgba(44, 179, 152, 0.5);
+.submit-btn-lg:hover:not(:disabled) {
+  background-color: #24917d; transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(44, 179, 152, 0.3);
 }
-.submit-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
-.error-msg { color: #e74c3c; margin-bottom: 16px; font-weight: 600; animation: shake 0.4s; }
+.submit-btn-lg:disabled { background-color: #ccc; cursor: not-allowed; }
+.arrow { font-size: 1.2rem; transition: transform 0.2s; }
+.submit-btn-lg:hover .arrow { transform: translateX(4px); }
 
-/* 흔들림 애니메이션 (에러 발생 시) */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-/* 등장 애니메이션 */
+/* 애니메이션 */
 .fade-in-up { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.8s ease forwards; }
 .delay-1 { animation-delay: 0.1s; }
 .delay-2 { animation-delay: 0.2s; }
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-/* [반응형 미디어 쿼리]
-  - 768px 이하(모바일/태블릿 세로)에서는 
-    그리드를 1열로 바꾸고, wide-card 속성을 해제하여 모든 카드가 한 줄씩 차지하게 합니다.
-*/
-@media (max-width: 768px) {
+/* 반응형 (태블릿/모바일) */
+@media (max-width: 900px) {
   .grid-layout { grid-template-columns: 1fr; }
-  .wide-card { grid-column: span 1; } 
-  .title { font-size: 1.8rem; }
-  .page-container { padding: 40px 16px 80px; }
-  .submit-btn { width: 100%; }
+  .wide-card { grid-column: span 1; }
+  .card-content-wrapper { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .step-info { width: 100%; border-right: none; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 10px; }
+  .slider-area { width: 100%; padding: 0; }
+  .action-content { flex-direction: column; gap: 16px; text-align: center; }
+  .submit-btn-lg { width: 100%; justify-content: center; }
 }
 </style>

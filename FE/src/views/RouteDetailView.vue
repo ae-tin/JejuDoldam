@@ -1,179 +1,220 @@
 <template>
-  <div class="page">
-    <div class="topRow">
-      <div>
-        <h2 class="title">저장한 루트 상세</h2>
-        <p class="sub">DAY별 장소를 추가/삭제/순서변경해서 바로 저장할 수 있어요.</p>
-      </div>
+  <div class="pc-layout-container" @mouseup="stopResize" @mouseleave="stopResize">
+    
+    <div v-if="loading" class="state-overlay">
+      <div class="spinner"></div>
+      <p>저장된 루트를 불러오고 있어요...</p>
+    </div>
 
-      <div class="topActions">
-        <button class="btn" type="button" @click="reload" :disabled="loading">
-          새로고침
-        </button>
+    <div v-else-if="error" class="state-overlay error">
+      <p>⚠️ {{ error }}</p>
+      <div class="actions">
+        <button class="btn-retry" @click="reload">다시 시도</button>
       </div>
     </div>
 
-    <div v-if="loading" class="card">불러오는 중...</div>
-    
-    <div v-else-if="error" class="card error">{{ error }}</div>
-
-    <div v-else-if="route" class="layout">
+    <div 
+      v-else-if="route" 
+      class="split-view"
+      @mousemove="onResize"
+    >
       
-      <section class="card left">
+      <aside class="left-panel" :style="{ width: panelWidth + 'px' }">
         
-        <div class="routeMeta">
-          <div class="metaRow">
-            <label class="label">제목</label>
-            <input class="input" v-model="edit.title" type="text" />
+        <div class="panel-header">
+          <div class="header-top">
+            <span class="badge">MY ROUTE</span>
           </div>
-          <div class="metaRow">
-            <label class="label">설명</label>
-            <input class="input" v-model="edit.description" type="text" placeholder="(선택)" />
-          </div>
-
-          <div class="metaActions">
-            <button class="btn primary" type="button" @click="saveRouteMeta" :disabled="metaSaving">
-              {{ metaSaving ? '저장 중...' : '수정사항 저장' }}
+          
+          <div class="route-meta-form">
+            <div class="input-group">
+              <label>여행 제목</label>
+              <input type="text" v-model="edit.title" class="input-title" placeholder="여행 제목을 입력하세요" />
+            </div>
+            <div class="input-group">
+              <label>설명</label>
+              <textarea v-model="edit.description" class="input-desc" placeholder="여행에 대한 간단한 설명을 남겨보세요" rows="2"></textarea>
+            </div>
+            
+            <button 
+              class="btn-save-meta" 
+              @click="saveRouteMeta" 
+              :disabled="metaSaving"
+            >
+              {{ metaSaving ? '저장 중...' : '수정사항 저장 완료 ✅' }}
             </button>
           </div>
         </div>
 
-        <hr class="hr" />
-
-        <div class="dayTabs">
-          <button v-for="d in sortedDays" :key="d.id" class="dayTab" :class="{ active: d.id === selectedDayId }"
-            type="button" @click="selectedDayId = d.id">
-            DAY {{ d.day }}
-          </button>
-
-          <button class="dayPlus" type="button" @click="addDay" :disabled="daySaving">
-            + DAY
-          </button>
+        <div class="day-tabs-sticky">
+          <div class="day-scroll-area">
+            <button
+              v-for="d in sortedDays"
+              :key="d.id"
+              class="day-chip"
+              :class="{ active: d.id === selectedDayId }"
+              @click="selectedDayId = d.id"
+            >
+              DAY {{ d.day }}
+            </button>
+            
+            <button class="day-add-btn" @click="addDay" :disabled="daySaving" title="DAY 추가">
+              +
+            </button>
+          </div>
         </div>
 
-        <div v-if="selectedDay" class="dayHeader">
-          <div class="dayTitle">
-            <b>DAY {{ selectedDay.day }}</b>
-            <span class="mutedSmall">({{ dayPlaces.length }}곳)</span>
+        <div class="place-list-container" v-if="selectedDay">
+          
+          <div class="day-header-row">
+            <h3 class="day-title">DAY {{ selectedDay.day }} 일정</h3>
+            <button class="btn-delete-day" @click="deleteDay" :disabled="daySaving">
+              🗑️ DAY 삭제
+            </button>
           </div>
 
-          <button class="mini danger" type="button" @click="deleteDay" :disabled="daySaving">
-            DAY 삭제
-          </button>
-        </div>
+          <div class="search-section">
+            <KakaoPlaceSearch @select="addPlaceToSelectedDay" />
+          </div>
 
-        <KakaoPlaceSearch v-if="selectedDay" @select="addPlaceToSelectedDay" />
+          <p v-if="dayPlaces.length" class="helper-text">
+            * 장소 클릭 시 사진/메모를 볼 수 있습니다.
+          </p>
 
-        <p v-if="dayPlaces.length" class="routeDesc" style="margin-top: 10px; text-align: center;">
-          클릭시 사진이 나타나요!
-        </p>
-
-        <ul v-if="selectedDay" class="placeList">
-          <li 
-            v-for="(p, idx) in dayPlaces" 
-            :key="p.id" 
-            class="placeItem" 
-            @click="togglePlacePhoto(p)"
-          >
-            <div class="placeTop">
-              <b>{{ idx + 1 }}. {{ p.name }}
-                <a 
-                  v-if="p.place_url" 
-                  class="link" 
-                  :href="p.place_url" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  @click.stop
-                >
-                  링크
-                </a>
-              </b>
-
-              <div class="miniBtns" @click.stop>
-                <button class="mini" type="button" @click="movePlace(idx, -1)" :disabled="idx === 0 || placeBusy">
-                  ▲
-                </button>
-                <button class="mini" type="button" @click="movePlace(idx, 1)"
-                  :disabled="idx === dayPlaces.length - 1 || placeBusy">
-                  ▼
-                </button>
-                <button class="mini danger" type="button" @click="removePlace(p.id)" :disabled="placeBusy">
-                  삭제
-                </button>
+          <ul class="place-items">
+            <li
+              v-for="(p, idx) in dayPlaces"
+              :key="p.id"
+              class="place-row"
+              :class="{ 'selected': selectedPlaceId === p.id }"
+              @click="togglePlacePhoto(p)"
+            >
+              <div class="place-info">
+                <span class="marker-num">{{ idx + 1 }}</span>
+                <div class="text-wrap">
+                  <strong class="name">
+                    {{ p.name }}
+                    <a v-if="p.place_url" :href="p.place_url" target="_blank" @click.stop class="map-link" title="카카오맵 보기">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                  </strong>
+                  <span class="addr">{{ p.address || '주소 정보 없음' }}</span>
+                </div>
               </div>
-            </div>
 
-            <div class="placeAddr">{{ p.address || '주소 정보 없음' }}</div>
+              <div class="place-actions" @click.stop>
+                <div class="btn-group">
+                  <button type="button" @click="movePlace(idx, -1)" :disabled="idx === 0 || placeBusy">▲</button>
+                  <button type="button" @click="movePlace(idx, 1)" :disabled="idx === dayPlaces.length - 1 || placeBusy">▼</button>
+                </div>
+                <button type="button" class="del-btn" @click="removePlace(p.id)" :disabled="placeBusy">×</button>
+              </div>
 
-            <input class="memo" v-model="p.memo" type="text" placeholder="메모(선택)"
-              @blur="savePlaceMemo(p)" :disabled="placeBusy" @click.stop />
+              <div v-if="selectedPlaceId === p.id" class="expand-content" @click.stop>
+                
+                <input 
+                  class="memo-input" 
+                  v-model="p.memo" 
+                  type="text" 
+                  placeholder="메모를 입력하세요 (자동 저장)"
+                  @blur="savePlaceMemo(p)" 
+                  :disabled="placeBusy" 
+                />
 
-            <div v-if="selectedPlaceId === p.id && p.photo_url" class="placePhoto">
-              <img :src="p.photo_url" :alt="p.name" />
-            </div>
-          </li>
-        </ul>
+                <div v-if="p.photo_url" class="photo-box">
+                  <img :src="p.photo_url" :alt="p.name" />
+                </div>
+              </div>
+            </li>
+          </ul>
 
-        <p v-if="selectedDay && !dayPlaces.length" class="mutedSmall" style="margin-top:10px;">
-          아직 장소가 없습니다. 위에서 검색해서 추가해보세요.
-        </p>
-      </section>
+          <div v-if="!dayPlaces.length" class="empty-placeholder">
+            <span class="icon">📍</span>
+            <p>아직 등록된 장소가 없습니다.<br>위 검색창에서 장소를 추가해보세요.</p>
+          </div>
 
-      <section class="card right">
-        <KakaoMap :places="dayPlaces" />
-      </section>
+        </div>
+      </aside>
+
+      <div class="resizer" @mousedown="startResize"></div>
+
+      <main class="right-map">
+        <KakaoMap :places="dayPlaces" class="full-map" />
+      </main>
+
     </div>
   </div>
 </template>
 
 <script setup>
-// Vue 및 라우터 라이브러리 임포트
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router' // 페이지 이동을 위해 useRouter 추가
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/client'
 import KakaoMap from '@/components/KakaoMap.vue'
 import KakaoPlaceSearch from '@/components/KakaoPlaceSearch.vue'
 
-// 라우터 객체 초기화
-const routeParam = useRoute()  // 현재 URL 파라미터 확인용
-const router = useRouter()     // 페이지 이동(push)용
+// --- [Resizing Logic (추가됨)] ---
+const panelWidth = ref(500) // ✅ 기본 사이즈 500px로 설정
+const isResizing = ref(false)
 
-// --- [상태 변수 선언] ---
-const loading = ref(false)   // 전체 데이터 로딩 상태
-const error = ref('')        // 에러 메시지
-const route = ref(null)      // 서버에서 받아온 루트 전체 데이터
+const startResize = () => {
+  isResizing.value = true
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
 
-const selectedDayId = ref(null) // 현재 선택된 DAY의 DB ID
+const onResize = (event) => {
+  if (!isResizing.value) return
+  let newWidth = event.clientX
+  // 최소 320px, 최대 800px 정도로 제한
+  if (newWidth < 320) newWidth = 320
+  if (newWidth > 800) newWidth = 800
+  panelWidth.value = newWidth
+}
 
-// 각 작업별 로딩 상태 (버튼 중복 클릭 방지)
-const metaSaving = ref(false) // 제목/설명 저장 중?
-const daySaving = ref(false)  // DAY 추가/삭제 중?
-const placeBusy = ref(false)  // 장소 추가/삭제/이동 중?
+const stopResize = () => {
+  if (isResizing.value) {
+    isResizing.value = false
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    // 지도가 리사이징 후 깨질 수 있으므로 크기 재조정 이벤트 발생
+    window.dispatchEvent(new Event('resize'))
+  }
+}
 
-// 사진 토글을 위한 선택된 장소 ID
+// ------------------------------------------------------------------
+// [기존 로직 100% 유지]
+// ------------------------------------------------------------------
+const routeParam = useRoute()
+const router = useRouter()
+
+const loading = ref(false)
+const error = ref('')
+const route = ref(null)
+
+const selectedDayId = ref(null)
+
+const metaSaving = ref(false)
+const daySaving = ref(false)
+const placeBusy = ref(false)
+
 const selectedPlaceId = ref(null)
 
-// 제목/설명 수정을 위한 임시 변수 (v-model 연결)
 const edit = ref({
   title: '',
   description: '',
 })
 
-// --- [Computed 속성] ---
-
-// DAY 목록을 날짜 순서(day 오름차순)로 정렬하여 반환
 const sortedDays = computed(() => {
   const days = route.value?.days || []
   return [...days].sort((a, b) => a.day - b.day)
 })
 
-// 현재 선택된 DAY 객체 찾기
 const selectedDay = computed(() => {
   if (!route.value) return null
   return (route.value.days || []).find(d => d.id === selectedDayId.value) || null
 })
 
-// 현재 선택된 DAY의 장소 목록 (순서(order)대로 정렬)
 const dayPlaces = computed(() => {
   const d = selectedDay.value
   if (!d) return []
@@ -181,34 +222,26 @@ const dayPlaces = computed(() => {
   return [...places].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 })
 
-// --- [Life Cycle] ---
 onMounted(() => {
-  reload() // 컴포넌트가 켜지면 데이터 로드 시작
+  reload()
 })
 
-// --- [메서드 구현] ---
-
-// 사진 토글 함수: 이미 열려있으면 닫고(null), 아니면 해당 ID 설정
 function togglePlacePhoto(place) {
   selectedPlaceId.value = selectedPlaceId.value === place.id ? null : place.id
 }
 
-// 데이터 불러오기 함수
 async function reload() {
   loading.value = true
   error.value = ''
-  selectedPlaceId.value = null // 새로고침 시 열린 사진 닫기
+  selectedPlaceId.value = null
   try {
     const routeId = routeParam.params.routeId
-    // GET /routes/{id}/ API 호출
     const { data } = await api.get(`/routes/${routeId}/`)
 
     route.value = data
-    // 편집용 변수에 데이터 복사
     edit.value.title = data.title || ''
     edit.value.description = data.description || ''
 
-    // 데이터 로드 후 첫 번째 DAY를 기본으로 선택
     const first = [...(data.days || [])].sort((a, b) => a.day - b.day)[0]
     selectedDayId.value = first?.id ?? null
   } catch (e) {
@@ -219,53 +252,38 @@ async function reload() {
   }
 }
 
-// ✅ [핵심 기능] 수정사항 저장 (제목/설명 저장 후 페이지 이동)
 async function saveRouteMeta() {
   if (!route.value) return
-  metaSaving.value = true // 로딩 시작
-  
+  metaSaving.value = true
   try {
     const routeId = route.value.id
-    
-    // 1. 서버에 PUT 요청으로 제목과 설명을 저장합니다.
     const { data } = await api.put(`/routes/${routeId}/`, {
       title: edit.value.title,
       description: edit.value.description,
     })
-    
-    // 2. 로컬 상태 업데이트 (화면 갱신)
     route.value.title = data.title
     route.value.description = data.description
-
-    // 3. 사용자에게 저장 완료 알림
+    
     alert('수정사항이 저장되었습니다!')
-
-    // 4. 마이페이지의 '저장한 경로' 탭으로 이동
-    // (사용자는 장소 변경까지 이때 다 저장된 것으로 인지하게 됩니다)
     router.push({ path: '/mypage', query: { tab: 'routes' } })
 
   } catch (e) {
     console.error(e)
     alert(parseDRFError(e) || '저장에 실패했습니다.')
   } finally {
-    metaSaving.value = false // 로딩 끝
+    metaSaving.value = false
   }
 }
 
-// DAY 추가 함수
 async function addDay() {
   if (!route.value) return
   daySaving.value = true
   try {
     const routeId = route.value.id
-    // 현재 가장 큰 day 번호를 찾아 +1
     const maxDay = Math.max(0, ...(route.value.days || []).map(d => d.day))
     const nextDay = maxDay + 1
 
-    // POST /routes/{id}/days/
     const { data } = await api.post(`/routes/${routeId}/days/`, { day: nextDay })
-    
-    // 배열에 추가하고 바로 해당 DAY 선택
     route.value.days.push(data)
     selectedDayId.value = data.id
   } catch (e) {
@@ -276,7 +294,6 @@ async function addDay() {
   }
 }
 
-// DAY 삭제 함수
 async function deleteDay() {
   if (!selectedDay.value) return
   if (!confirm(`DAY ${selectedDay.value.day}를 삭제할까요? (해당 DAY의 장소도 모두 삭제됩니다)`)) return
@@ -284,13 +301,10 @@ async function deleteDay() {
   daySaving.value = true
   try {
     const dayId = selectedDay.value.id
-    // DELETE /routes/days/{dayId}/
     await api.delete(`/routes/days/${dayId}/`)
 
-    // 로컬 배열에서 제거
     route.value.days = (route.value.days || []).filter(d => d.id !== dayId)
 
-    // 삭제 후 첫 번째 DAY로 포커스 이동
     const first = sortedDays.value[0]
     selectedDayId.value = first?.id ?? null
   } catch (e) {
@@ -301,18 +315,15 @@ async function deleteDay() {
   }
 }
 
-// 장소 추가 함수 (검색 결과 선택 시 호출)
 async function addPlaceToSelectedDay(place) {
   const d = selectedDay.value
   if (!d) return
 
   placeBusy.value = true
   try {
-    // 현재 장소들의 order 중 가장 큰 값 + 1 로 순서 지정
     const orders = (d.places || []).map(p => Number(p.order || 0))
     const nextOrder = (orders.length ? Math.max(...orders) : 0) + 1
 
-    // API에 보낼 데이터 구성 (사진 URL 포함)
     const payload = {
       order: nextOrder,
       name: place.name,
@@ -324,9 +335,8 @@ async function addPlaceToSelectedDay(place) {
       memo: '',
     }
 
-    // POST /routes/days/{dayId}/places/
     const { data } = await api.post(`/routes/days/${d.id}/places/`, payload)
-    d.places.push(data) // 화면에 즉시 반영
+    d.places.push(data)
   } catch (e) {
     console.error(e)
     alert(parseDRFError(e) || '장소 추가에 실패했습니다.')
@@ -335,7 +345,6 @@ async function addPlaceToSelectedDay(place) {
   }
 }
 
-// 장소 삭제 함수
 async function removePlace(placeId) {
   const d = selectedDay.value
   if (!d) return
@@ -343,11 +352,8 @@ async function removePlace(placeId) {
 
   placeBusy.value = true
   try {
-    // DELETE /routes/places/{placeId}/
     await api.delete(`/routes/places/${placeId}/`)
     d.places = (d.places || []).filter(p => p.id !== placeId)
-    
-    // 삭제 후 순서가 비지 않도록 재정렬 (1, 3, 4 -> 1, 2, 3)
     await persistReorder(d)
   } catch (e) {
     console.error(e)
@@ -357,52 +363,41 @@ async function removePlace(placeId) {
   }
 }
 
-// 장소 순서 이동 (위/아래 화살표)
 async function movePlace(idx, dir) {
   const d = selectedDay.value
   if (!d) return
 
-  // 현재 순서대로 정렬된 배열 복사
   const arr = [...(d.places || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const next = idx + dir
-  
-  // 범위 벗어나면 무시
   if (next < 0 || next >= arr.length) return
 
-  // 배열 내에서 위치 교환 (Swap)
   const tmp = arr[idx]
   arr[idx] = arr[next]
   arr[next] = tmp
 
-  // 로컬 order 값 재할당
   arr.forEach((p, i) => { p.order = i + 1 })
   d.places = arr
 
   placeBusy.value = true
   try {
-    // DB에 바뀐 순서 저장
     await persistReorder(d)
   } catch (e) {
     console.error(e)
     alert(parseDRFError(e) || '순서 저장에 실패했습니다. 새로고침 후 다시 시도해주세요.')
-    await reload() // 실패 시 데이터 원복을 위해 새로고침
+    await reload()
   } finally {
     placeBusy.value = false
   }
 }
 
-// 순서 재정렬 및 DB 저장 로직
 async function persistReorder(dayObj) {
   const places = [...(dayObj.places || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   if (!places.length) return
 
-  // [DB Unique 제약 조건 회피용 트릭]
-  // 1. 먼저 모든 순서를 1000번대 임시 값으로 변경
   for (let i = 0; i < places.length; i++) {
     await api.patch(`/routes/places/${places[i].id}/`, { order: 1000 + i + 1 })
   }
 
-  // 2. 다시 1번부터 차례대로 올바른 순서 부여
   for (let i = 0; i < places.length; i++) {
     const finalOrder = i + 1
     const { data } = await api.patch(`/routes/places/${places[i].id}/`, { order: finalOrder })
@@ -412,26 +407,20 @@ async function persistReorder(dayObj) {
   dayObj.places = places
 }
 
-// 메모 저장 함수 (input blur 시 호출)
 async function savePlaceMemo(p) {
   if (!p?.id) return
   try {
     await api.patch(`/routes/places/${p.id}/`, { memo: p.memo ?? '' })
   } catch (e) {
     console.error(e)
-    // 메모 저장은 실패해도 사용자에게 굳이 알리지 않음 (조용한 실패)
   }
 }
 
-// Django REST Framework 에러 메시지 파싱 헬퍼
 function parseDRFError(err) {
   const data = err?.response?.data
   if (!data) return ''
-
   if (typeof data === 'string') return data
   if (data.detail && typeof data.detail === 'string') return data.detail
-
-  // { field: ["error message"] } 형태일 때
   if (typeof data === 'object') {
     const msgs = []
     for (const [k, v] of Object.entries(data)) {
@@ -445,264 +434,303 @@ function parseDRFError(err) {
 </script>
 
 <style scoped>
-.page {
-  max-width: 1200px;
-  margin: 0 auto;
+/* [PC 레이아웃 공통] */
+.pc-layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-top: 60px; /* Navbar 높이 */
+  background-color: #fff;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.card {
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 16px;
+/* 스플릿 뷰 */
+.split-view {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* --- [LEFT PANEL] --- */
+.left-panel {
+  border-right: 1px solid #e0e0e0;
   background: #fff;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  position: relative;
+  z-index: 5;
+  min-width: 320px;
+  max-width: 800px;
+  /* width는 인라인 스타일로 제어됨 */
 }
 
-.error {
-  color: #dc2626;
+/* [RESIZER HANDLE] */
+.resizer {
+  width: 8px;
+  background: transparent;
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 10;
+  margin-left: -4px;
+  transition: background 0.2s;
+}
+.resizer:hover, .resizer:active {
+  background: rgba(44, 179, 152, 0.2); 
+  border-left: 1px solid #2cb398;
 }
 
-.topRow {
+/* 패널 헤더 */
+.panel-header {
+  padding: 24px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 10px 0 14px;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.title {
-  margin: 0;
+.badge {
+  background-color: #e6f7f4;
+  color: #2cb398;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.sub {
-  margin: 6px 0 0;
-  color: #666;
-  font-size: 13px;
+.btn-refresh {
+  background: none; border: none; cursor: pointer; font-size: 1.3rem;
+  transition: transform 0.2s;
 }
+.btn-refresh:hover { transform: rotate(180deg); }
 
-.topActions {
-  display: flex;
-  gap: 8px;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 16px;
-  margin-top: 14px;
-}
-
-.left {
-  min-height: 520px;
-}
-
-.right {
-  min-height: 520px;
-  display: flex;
-}
-
-.routeMeta {
+/* 메타 정보 폼 & 폰트 스타일링 */
+.route-meta-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.metaRow {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.input-group label {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
 }
 
-.label {
-  font-size: 12px;
+/* 제목 입력 필드 */
+.input-title {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.2rem;
+  font-weight: 700; /* 제목은 굵게 */
+  color: #222;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.input-title:focus { border-color: #2cb398; }
+
+/* 설명 입력 필드 */
+.input-desc {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: #555;
-}
-
-.input {
-  padding: 10px 12px;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 8px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
 }
+.input-desc:focus { border-color: #2cb398; }
 
-.metaActions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.hr {
+.btn-save-meta {
+  width: 100%;
+  padding: 12px;
+  background-color: #333;
+  color: white;
   border: none;
-  border-top: 1px solid #f0f0f0;
-  margin: 14px 0;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 4px;
+}
+.btn-save-meta:hover:not(:disabled) { background-color: #2cb398; }
+.btn-save-meta:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* DAY 탭 */
+.day-tabs-sticky {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 12px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  z-index: 10;
 }
 
-.dayTabs {
+.day-scroll-area {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
+.day-scroll-area::-webkit-scrollbar { height: 0; }
 
-.dayTab {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
+.day-chip {
+  padding: 6px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
   background: #fff;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  font-size: 13px;
+  transition: all 0.2s;
+}
+.day-chip.active {
+  background: #2cb398;
+  color: white;
+  border-color: #2cb398;
 }
 
-.dayTab.active {
-  border-color: #111827;
+.day-add-btn {
+  padding: 6px 12px;
+  border: 1px dashed #ccc;
+  border-radius: 20px;
+  background: #f9f9f9;
+  color: #888;
+  cursor: pointer;
   font-weight: 700;
 }
+.day-add-btn:hover { border-color: #2cb398; color: #2cb398; }
 
-.dayPlus {
-  padding: 8px 10px;
-  border: 1px dashed #ddd;
-  border-radius: 999px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  color: #555;
+/* 리스트 컨테이너 */
+.place-list-container {
+  padding: 24px;
+  padding-bottom: 60px;
+  flex: 1;
 }
 
-.dayHeader {
+.day-header-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin: 12px 0;
+  align-items: center;
+  margin-bottom: 16px;
 }
-
-.dayTitle {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.day-title { font-size: 1.1rem; font-weight: 800; color: #333; margin: 0; }
+.btn-delete-day {
+  font-size: 0.8rem; color: #e74c3c; background: none; border: none; cursor: pointer;
 }
+.btn-delete-day:hover { text-decoration: underline; }
 
-.placeList {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 0;
+.search-section { margin-bottom: 16px; }
+.helper-text { font-size: 0.8rem; color: #999; margin-bottom: 12px; text-align: right; }
+
+/* 장소 아이템 */
+.place-items { list-style: none; padding: 0; margin: 0; }
+
+.place-row {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-/* 리스트 아이템에 클릭 가능 커서 추가 */
-.placeItem {
   border: 1px solid #f0f0f0;
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
   cursor: pointer;
-}
-.placeItem:hover {
-  background-color: #fcfcfc;
-}
-
-.placeTop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.placeAddr {
-  color: #666;
-  font-size: 12px;
-  margin-top: 6px;
-}
-
-.memo {
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px 12px;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.miniBtns {
-  margin-left: auto;
-  display: flex;
-  gap: 6px;
-}
-
-.btn {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  transition: all 0.2s;
   background: #fff;
-  cursor: pointer;
 }
+.place-row:hover { border-color: #2cb398; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.place-row.selected { border-color: #2cb398; background-color: #fafffe; }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 저장 버튼 강조 스타일 */
-.btn.primary {
-  background-color: #111827;
+.place-info { display: flex; align-items: flex-start; }
+.marker-num {
+  width: 24px; height: 24px;
+  background: #2cb398;
   color: white;
-  border-color: #111827;
+  border-radius: 50%;
+  text-align: center; line-height: 24px;
+  font-size: 0.8rem; font-weight: 700;
+  margin-right: 12px; flex-shrink: 0;
 }
-.btn.primary:disabled {
-  background-color: #6b7280;
-  border-color: #6b7280;
+.text-wrap { flex: 1; }
+.name { display: block; font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+.map-link { color: #aaa; margin-left: 6px; vertical-align: middle; }
+.map-link:hover { color: #2cb398; }
+.addr { display: block; font-size: 0.85rem; color: #888; }
+
+.place-actions {
+  display: flex; justify-content: flex-end; align-items: center;
+  margin-top: 8px; gap: 8px;
 }
-
-.mini {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 12px;
+.btn-group { display: flex; border: 1px solid #eee; border-radius: 6px; overflow: hidden; }
+.btn-group button {
+  width: 28px; height: 28px; border: none; background: #fff; cursor: pointer;
+  font-size: 0.7rem; border-right: 1px solid #eee;
 }
+.btn-group button:last-child { border-right: none; }
+.btn-group button:hover:not(:disabled) { background: #f5f5f5; }
+.del-btn { background: none; border: none; color: #bbb; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
+.del-btn:hover { color: #e74c3c; }
 
-.mini:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* 확장 영역 & 메모 입력 */
+.expand-content { margin-top: 16px; border-top: 1px solid #f0f0f0; padding-top: 12px; }
+.memo-input {
+  width: 100%; 
+  padding: 10px 12px; 
+  font-size: 0.9rem;
+  color: #444;
+  border: 1px solid #eee; 
+  border-radius: 8px; 
+  outline: none; 
+  margin-bottom: 12px;
+  background-color: #fafafa;
+  transition: all 0.2s;
 }
+.memo-input:focus { border-color: #2cb398; background-color: #fff; }
+.photo-box img { width: 100%; border-radius: 8px; border: 1px solid #eee; }
 
-.danger {
-  border-color: #fca5a5;
-  color: #991b1b;
+.empty-placeholder { text-align: center; padding: 40px 0; color: #aaa; }
+.empty-placeholder .icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+/* [RIGHT PANEL] */
+.right-map { flex: 1; background: #f0f0f0; position: relative; }
+.full-map { width: 100%; height: 100%; }
+
+/* 로딩/에러 */
+.state-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
 }
-
-.mutedSmall {
-  color: #777;
-  font-size: 12px;
+.btn-retry { margin-top: 16px; padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; }
+.spinner {
+  width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2cb398;
+  border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* 링크 스타일 */
-.link {
-  font-size: 12px;
-  color: #2563eb;
-  text-decoration: none;
-  margin-left: 6px;
-}
-.link:hover { text-decoration: underline; }
-
-/* 사진 표시 스타일 */
-.placePhoto {
-  margin-top: 10px;
-}
-
-.placePhoto img {
-  width: 100%;
-  max-height: 220px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid #eee;
-}
-
-.routeDesc { margin: 0; color:#555; font-size: 13px; }
-
+/* 모바일 대응 */
 @media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .right {
-    min-height: 420px;
-  }
+  .split-view { flex-direction: column-reverse; }
+  .left-panel { width: 100% !important; height: 50vh; }
+  .right-map { height: 50vh; }
+  .resizer { display: none; }
 }
 </style>
