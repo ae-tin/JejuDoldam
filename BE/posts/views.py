@@ -164,3 +164,33 @@ class CommentAPIView(APIView):
         
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+class MyPostsAPIView(APIView):
+    """
+    현재 로그인되어있는 사용자가 작성한 글만 조회
+    GET /api/v1/post/my/
+    -> 현재 로그인되어있는 사용자가 작성한 게시글 조회
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        posts = Post.objects.annotate(
+            comment_count=Count("writed_comments", distinct=True),
+            like_count=Count("like_users", distinct=True),
+        ).filter(user=request.user).order_by("-created_at")
+        serializer = PostListSerailizer(posts, many=True, context={"request": request})
+        return Response(serializer.data)
+    
+    
+class MyLikePostAPIView(APIView):
+    """
+    현재 로그인되어있는 사용자가 "좋아요"한 게시글만 조회
+    GET /api/v1/post/my/like/
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        posts = get_list_or_404(Post, like_users = request.user)
+        serializer = PostListSerailizer(posts, many=True, context={"request": request})
+        return Response(serializer.data)
