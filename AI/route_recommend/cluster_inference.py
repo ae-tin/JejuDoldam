@@ -7,8 +7,9 @@ from utils import trace_error, replace_nan
 BASE_DIR = Path().resolve().parent.parent
 save_path = BASE_DIR / "AI" / "route_recommend" / "model"
 gps_data_path = BASE_DIR / "AI" / "route_recommend" / "data_local"
-
-df_raw = pd.read_csv(save_path / "rating_user_info_all_cluster.csv")
+# photo url이 존재하는 user만 따로 담은 csv
+df_raw = pd.read_csv(save_path / "rating_user_info_all_cluster_photo.csv")
+df_raw = df_raw.loc[:, ~df_raw.columns.str.startswith("Unnamed")]
 df_desc = pd.read_csv(save_path / "gps_route_desc.csv")
 df_desc = df_desc.set_index("TRAVELER_ID")
 
@@ -224,18 +225,18 @@ def find_route(rec_result: dict) -> dict:
     가장 유사한 유저의 루트 추천
     """
     top_users = rec_result["similar_user"]
-    # print(rec_result["distance"])
+
     result = []
     for user in top_users:
         fname = str(user) + ".csv"
         df = pd.read_csv(gps_data_path / fname)
+        df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
         df = df.where(pd.notna(df), None)
         json_data = df.to_dict(orient="list")
         json_data = replace_nan(json_data)
         # title, description 추가
         json_data["TITLE"] = df_desc.loc[user, "TITLE"]
         json_data["DESCRIPTION"] = df_desc.loc[user, "DESCRIPTION"]
-
         result.append(json_data)
     if not result:
         print("추천 루트가 존재하지 않습니다")
