@@ -106,7 +106,7 @@
               <b>{{ p.order }}. {{ p.name }}
                 <a v-if="p.place_url" class="link" :href="p.place_url" target="_blank" rel="noreferrer">
                   링크
-                </a>~
+                </a>
               </b>
 
               <div class="miniBtns" @click.stop>
