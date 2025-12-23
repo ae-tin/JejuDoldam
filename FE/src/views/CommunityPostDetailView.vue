@@ -123,7 +123,7 @@
         <ul v-if="post.writed_comments?.length" class="comment-list">
           <li v-for="c in post.writed_comments" :key="c.id" class="comment-item">
             <div class="comment-header">
-              <span class="comment-author">{{ c.user }}</span>
+              <span class="comment-author">{{ c.user.username }}</span>
               <span class="comment-date">{{ formatDate(c.created_at) }}</span>
             </div>
             <p class="comment-content">{{ c.content }}</p>
