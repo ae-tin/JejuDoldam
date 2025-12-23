@@ -223,6 +223,7 @@ onMounted(async () => {
       ])
       me.value = meRes.data
       routes.value = routesRes.data
+      console.log(routes)
     } catch (e) {
       console.error(e)
       error.value = '데이터를 불러오지 못했습니다.'

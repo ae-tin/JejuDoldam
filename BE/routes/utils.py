@@ -169,7 +169,7 @@ user_info = {
 """
 
 
-def preprocessing_input_data_no_add_info(user_data: dict, rec="route") -> dict:
+def preprocessing_input_data_no_add_info(user_data: dict, rec: str = "route") -> dict:
     """
     루트추천로직 외의 place 추천 input 처리기능
     기본 사용자 정보 외 없는 데이터는 랜덤으로 처리
@@ -204,7 +204,6 @@ def preprocessing_input_data_no_add_info(user_data: dict, rec="route") -> dict:
 
         if rec == "place":
             user_info["TRAVEL_STATUS_DESTINATION"] = "제주"
-
     return user_info
 
 

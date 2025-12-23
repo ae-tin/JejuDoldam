@@ -325,8 +325,10 @@ class RouteRecommendAPIView(APIView):
             **data,
         }
 
-        # ai 장소 추천 생성 전처리 및 호출
-        place_ai_input_random_data = preprocessing_input_data_no_add_info(user_info)
+        # ai 장소 추천 생성 전처리 및 호출 -> 장소 추천 안넣을거면 지워도 됨
+        place_ai_input_random_data = preprocessing_input_data_no_add_info(
+            user_info, rec="place"
+        )
         place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
         places_random_data = self.create_ai_places(place_ai_input_random_data)
         places_full_data = self.create_ai_places(place_ai_input_full_data)
@@ -363,7 +365,7 @@ class RouteRecommendAPIView(APIView):
             user_info, rec="place"
         )
         # # place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
-        # places_random_data = self.create_ai_places(place_ai_input_random_data)
+        places_random_data = self.create_ai_places(place_ai_input_random_data)
         # places_full_data = self.create_ai_places(place_ai_input_full_data)
 
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
