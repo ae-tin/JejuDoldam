@@ -178,7 +178,7 @@ class MyPostsAPIView(APIView):
         posts = Post.objects.annotate(
             comment_count=Count("writed_comments", distinct=True),
             like_count=Count("like_users", distinct=True),
-        ).order_by("-created_at")
+        ).filter(user=request.user).order_by("-created_at")
         serializer = PostListSerailizer(posts, many=True, context={"request": request})
         return Response(serializer.data)
     

@@ -102,7 +102,7 @@ const fetchLikedPosts = async () => {
     }
   } catch (e) {
     console.error(e)
-    error.value = '목록을 불러오지 못했습니다.'
+    error.value = '목록을 불러오지 못했습니다. 아직 좋아요한 게시글이 없을 수 있습니다!'
   } finally {
     loading.value = false
   }
