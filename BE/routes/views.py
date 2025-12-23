@@ -567,6 +567,8 @@ class RouteConfirmAPIView(APIView):
                     latitude=place_data.get("latitude"),
                     longitude=place_data.get("longitude"),
                     memo=place_data.get("memo", ""),
+                    place_url=place_data.get("place_url"),
+                    photo_url=place_data.get("photo_url"),
                 )
         # 완성된 Route 객체를 반환
         return route

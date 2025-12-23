@@ -71,7 +71,9 @@ class RoutePlace(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     memo = models.TextField(blank=True)
-
+    photo_url = models.TextField(null=True, blank=True)
+    place_url = models.CharField(max_length=150, null=True, blank=True)
+    
     class Meta:
         # 한 일차 안에서는 order가 겹치지 않도록
         unique_together = ("route_day", "order")
