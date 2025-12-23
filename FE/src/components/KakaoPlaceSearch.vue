@@ -80,6 +80,7 @@ function select(p) {
     address: p.address ?? '',
     latitude: p.latitude ?? null,
     longitude: p.longitude ?? null,
+    place_url: p.place_url ?? '',
   })
 }
 </script>
