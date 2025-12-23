@@ -79,8 +79,8 @@
               </div> -->
               <div
                 class="route-card-img"
-                :class="{ 'recommend-gradient': !r.places[0].photo_url }"
-                :style="r.places[0].photo_url ? bgStyle(r.places[0].photo_url) : {}"
+                :class="{ 'recommend-gradient': !r.photo_url }"
+                :style="r.photo_url ? bgStyle(r.photo_url) : {}"
               >
                 <span class="route-tag">Saved</span>
               </div>
@@ -162,7 +162,6 @@ const router = useRouter()
 const me = ref(null)
 const routes = ref([])
 const recentRoutes = computed(() => routes.value.slice(0, 3))
-console.log(recentRoutes)
 const loading = ref(false)
 const error = ref('')
 
@@ -186,7 +185,6 @@ async function fetchRecommendedRoutes() {
   try {
     const { data } = await api.get('/routes/recommend/')
     recommendedRoutes.value = data || []
-    console.log(recommendedRoutes)
   } catch (e) {
     console.error('추천 루트 로딩 실패', e)
     recommendedRoutes.value = []
@@ -221,9 +219,18 @@ onMounted(async () => {
         api.get('/auth/me/'),
         api.get('/routes/'),
       ])
-      me.value = meRes.data
-      routes.value = routesRes.data
-      console.log(routes)
+
+      const routesData = routesRes.data
+
+      for (const route of routesData) {
+        const photoRes = await api.get('/routes/photo/', {
+          params: { route_id: route.id }
+        })
+
+        route.photo_url = photoRes.data?.photo_url || null
+      }
+      routes.value = routesData
+
     } catch (e) {
       console.error(e)
       error.value = '데이터를 불러오지 못했습니다.'
@@ -235,40 +242,6 @@ onMounted(async () => {
   // ✅ 추천 루트 API 호출 (로그인 여부 무관)
   fetchRecommendedRoutes()
 })
-
-
-// onMounted(async () => {
-//   // Intersection Observer (애니메이션)
-//   observer = new IntersectionObserver((entries) => {
-//     entries.forEach((entry) => {
-//       if (entry.isIntersecting) {
-//         entry.target.classList.add('visible')
-//       }
-//     });
-//   }, { threshold: 0.1 });
-
-//   document.querySelectorAll('.fade-element').forEach(el => observer.observe(el));
-
-//   // 데이터 로딩 (로그인 시에만)
-//   if (!auth.isAuthenticated) return
-
-//   loading.value = true
-//   error.value = ''
-
-//   try {
-//     const [meRes, routesRes] = await Promise.all([
-//       api.get('/auth/me/'),
-//       api.get('/routes/'),
-//     ])
-//     me.value = meRes.data
-//     routes.value = routesRes.data
-//   } catch (e) {
-//     console.error(e)
-//     error.value = '데이터를 불러오지 못했습니다.'
-//   } finally {
-//     loading.value = false
-//   }
-// })
 
 onUnmounted(() => {
   if (observer) observer.disconnect()

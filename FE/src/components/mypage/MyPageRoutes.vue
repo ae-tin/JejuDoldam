@@ -17,7 +17,11 @@
         class="route-card"
         @click="goDetail(route.id)"
       >
-        <div class="card-thumb">
+        <div 
+          class="card-thumb"
+          :class="{ 'recommend-gradient': !route.photo_url }"
+          :style="route.photo_url ? bgStyle(route.photo_url) : {}"
+        >
           <span class="badge">Route #{{ route.id }}</span>
         </div>
         
@@ -74,7 +78,18 @@ const fetchRoutes = async () => {
     // 2. 백엔드에 GET 요청
     const { data } = await api.get('/routes/')
     // 3. 받아온 데이터를 ID 역순(최신순)으로 정렬해서 저장
-    routes.value = data.sort((a, b) => b.id - a.id)
+    const routesData = data.sort((a, b) => b.id - a.id)
+
+    for (const route of routesData) {
+      const photoRes = await api.get('/routes/photo/', {
+        params: { route_id: route.id }
+      })
+
+      route.photo_url = photoRes.data?.photo_url || null
+    }
+
+    routes.value = routesData
+
   } catch (e) {
     console.error('루트 목록 로드 실패:', e)
   } finally {
@@ -83,6 +98,13 @@ const fetchRoutes = async () => {
   }
 }
 
+
+const bgStyle = (url) => ({
+  backgroundImage: `url(${url})`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+})
 // --- [라이프사이클] ---
 // 컴포넌트가 마운트되자마자 데이터를 불러옵니다.
 onMounted(() => {
