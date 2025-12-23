@@ -1,13 +1,13 @@
 import requests
 from django.db import transaction, IntegrityError
 from django.conf import settings
-from django.shortcuts import get_object_or_404, get_list_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Route, RouteDay, RoutePlace
-from .utils import preprocessing_input_data, preprocessing_place_input_data
+from .utils import preprocessing_input_data, preprocessing_input_data_no_add_info
 from accounts.models import User
 from .serializers import (
     RouteSerializer,
@@ -17,7 +17,6 @@ from .serializers import (
     RouteRecommendInputSerializer2,
     RouteConfirmInputSerializer,
 )
-import random
 
 # Create your views here.
 
@@ -326,8 +325,10 @@ class RouteRecommendAPIView(APIView):
             **data,
         }
 
-        # ai 장소 추천 생성 전처리 및 호출
-        place_ai_input_random_data = preprocessing_place_input_data(user_info)
+        # ai 장소 추천 생성 전처리 및 호출 -> 장소 추천 안넣을거면 지워도 됨
+        place_ai_input_random_data = preprocessing_input_data_no_add_info(
+            user_info, rec="place"
+        )
         place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
         places_random_data = self.create_ai_places(place_ai_input_random_data)
         places_full_data = self.create_ai_places(place_ai_input_full_data)
@@ -335,6 +336,43 @@ class RouteRecommendAPIView(APIView):
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
         route_ai_input_data = preprocessing_input_data(ai_input_data)
         routes = self.create_ai_routes(route_ai_input_data)
+        if not routes:
+            return Response(
+                {"detail": "경로 추천이 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(routes)
+
+    def get(self, request):
+        # 유저 DB 정보 로드
+        user_data = get_object_or_404(User, username=request.user)
+        user_info = {
+            "GENDER": user_data.gender,  # pass
+            "AGE_GRP": user_data.birth_date,  # pass
+            "MARR_STTS": user_data.marriage_status,  # pass
+            "JOB_NM": user_data.job,  # pass
+            "INCOME": user_data.income,  # pass
+            "TRAVEL_NUM": user_data.travel_num,  # pass
+            "TRAVEL_STATUS_RESIDENCE": user_data.residence,  # pass
+        }
+
+        # ai_input 형식 맞추기
+        ai_input_data = {**user_info}
+
+        # ai 장소 추천 생성 전처리 및 호출
+        place_ai_input_random_data = preprocessing_input_data_no_add_info(
+            user_info, rec="place"
+        )
+        # # place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
+        places_random_data = self.create_ai_places(place_ai_input_random_data)
+        # places_full_data = self.create_ai_places(place_ai_input_full_data)
+
+        # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
+        route_ai_input_random_data = preprocessing_input_data_no_add_info(
+            ai_input_data, rec="route"
+        )
+        routes = self.create_ai_routes(route_ai_input_random_data)
         if not routes:
             return Response(
                 {"detail": "경로 추천이 실패하였습니다."},
@@ -612,24 +650,29 @@ class RandomRoutePlaceAPIView(APIView):
     메인 페이지에서 사용자가 저장한 루트의 장소 중 랜덤으로
     photo_url이 존재하는 장소 정보를 반환
     """
-    
+
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         """
         로그인한 사용자의 루트를 상세조회하고, photo_url이 존재하는
         랜덤한 장소를 반환
         """
-        random_place = RoutePlace.objects.filter(
-            route_day__route__user=request.user,  # FK 관계를 더블 언더스코어(__)로 연결
-            photo_url__isnull=False
-        ).exclude(
-            photo_url=""
-        ).order_by("?").first()
+        random_place = (
+            RoutePlace.objects.filter(
+                route_day__route__user=request.user,  # FK 관계를 더블 언더스코어(__)로 연결
+                photo_url__isnull=False,
+            )
+            .exclude(photo_url="")
+            .order_by("?")
+            .first()
+        )
 
         # 사진 있는 장소가 하나도 없을 경우 처리
         if not random_place:
-            return Response({"message": "사진이 등록된 장소가 없습니다."}, status=404)
+            print(random_place)
+            return Response({"photo_url": None})
+            # return Response({"message": "사진이 등록된 장소가 없습니다."}, status=404)
 
         serializer = RoutePlaceSerializer(random_place)
         return Response(serializer.data)
