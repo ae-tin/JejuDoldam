@@ -114,3 +114,23 @@ class MeSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", ]
         read_only_fields = fields
+        
+        
+class UserInfoUpdateSerializer(serializers.ModelSerializer):
+    """
+    사용자의 유저 정보를 변경하는 serializer
+    """
+    class Meta:
+        model = User
+        fields = ["birth_date", "marriage_status", "job", "income", "travel_num", "residence",]
+    
+    def validate_birth_date(self, value):
+        """
+        # 사용자가 입력한 생년월일을 검증함
+        """
+        if value > date.today():
+            raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
+        return value
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
