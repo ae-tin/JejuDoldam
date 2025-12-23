@@ -1,7 +1,7 @@
 import requests
 from django.db import transaction, IntegrityError
 from django.conf import settings
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -17,6 +17,7 @@ from .serializers import (
     RouteRecommendInputSerializer2,
     RouteConfirmInputSerializer,
 )
+import random
 
 # Create your views here.
 
@@ -642,4 +643,32 @@ class RouteDetailInPostAPIView(APIView):
         """
         route = get_object_or_404(Route, pk=route_pk)
         serializer = RouteDetailSerializer(route)
+        return Response(serializer.data)
+
+
+class RandomRoutePlaceAPIView(APIView):
+    """
+    메인 페이지에서 사용자가 저장한 루트의 장소 중 랜덤으로
+    photo_url이 존재하는 장소 정보를 반환
+    """
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """
+        로그인한 사용자의 루트를 상세조회하고, photo_url이 존재하는
+        랜덤한 장소를 반환
+        """
+        random_place = RoutePlace.objects.filter(
+            route_day__route__user=request.user,  # FK 관계를 더블 언더스코어(__)로 연결
+            photo_url__isnull=False
+        ).exclude(
+            photo_url=""
+        ).order_by("?").first()
+
+        # 사진 있는 장소가 하나도 없을 경우 처리
+        if not random_place:
+            return Response({"message": "사진이 등록된 장소가 없습니다."}, status=404)
+
+        serializer = RoutePlaceSerializer(random_place)
         return Response(serializer.data)
