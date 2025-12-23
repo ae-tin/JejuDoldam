@@ -1,66 +1,192 @@
 <template>
-  <div class="home">
-    <h2>홈</h2>
+  <div class="triple-container">
+    <NavVar />
 
-    <!-- 비로그인 -->
-    <div v-if="!auth.isAuthenticated" class="card">
-      <p>로그인하면 저장한 루트와 추천 기능을 사용할 수 있어요.</p>
-      <div class="actions">
-        <RouterLink to="/login" class="btn">로그인</RouterLink>
-        <RouterLink to="/signup" class="btn">회원가입</RouterLink>
-      </div>
+    <div v-if="!auth.isAuthenticated" class="landing-view">
+      <header class="hero-section">
+        <div class="hero-bg"></div>
+        <div class="hero-text fade-element">
+          <h1>여행의 모든 것,<br>AI가 설계해 드립니다</h1>
+          <p>로그인하고 나만의 맞춤형 루트를 저장하세요.</p>
+          <div class="cta-group">
+            <button class="cta-button" @click="router.push('/login')">
+              로그인하고 시작하기
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="features-section fade-element delay-200">
+        <div class="feature-item">
+          <div class="icon">🤖</div><h3>AI 맞춤 추천</h3><p>클릭 몇 번으로 최적의 동선 완성</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">📍</div><h3>검증된 장소</h3><p>카카오맵 기반의 정확한 정보</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">📂</div><h3>루트 저장</h3><p>언제든 다시 꺼내보는 여행 계획</p>
+        </div>
+      </section>
     </div>
 
-    <!-- 로그인 -->
-    <div v-else class="card">
-      <p v-if="me">안녕하세요, <b>{{ me.username }}</b>님</p>
-      <p v-else>유저 정보를 불러오는 중...</p>
+    <div v-else class="dashboard-view">
+      <div class="content-wrapper">
+        <section class="dashboard-header fade-element">
+          <h2 v-if="me">반가워요, <b>{{ me.username }}</b>님! 👋<br>어디로 떠나볼까요?</h2>
+          <h2 v-else>여행 준비를 시작해볼까요?</h2>
+          
+          <div class="action-cards">
+            <div class="action-card primary" @click="router.push('/routes/recommend')">
+              <div class="card-icon">✈️</div>
+              <div class="card-text">
+                <h3>새로운 루트 만들기</h3>
+                <p>AI가 취향에 딱 맞는 코스를 짜드려요</p>
+              </div>
+            </div>
+            <div class="action-card" @click="router.push('/community')">
+              <div class="card-icon">💬</div>
+              <div class="card-text">
+                <h3>커뮤니티</h3>
+                <p>다른 여행자들의 꿀팁 구경하기</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <div class="actions">
-        <RouterLink to="/routes/recommend" class="btn">루트 추천 받기</RouterLink>
-        <RouterLink to="/mypage" class="btn">마이페이지</RouterLink>
-        <RouterLink to="/community" class="btn">커뮤니티</RouterLink>
+        <hr class="divider fade-element delay-100" />
+
+        <section class="recent-routes-section fade-element delay-200">
+          <div class="section-header">
+            <h3>최근 저장한 루트</h3>
+            <RouterLink to="/mypage?tab=routes" class="more-link">전체보기 ></RouterLink>
+          </div>
+
+          <div v-if="loading" class="status-msg">
+            <div class="spinner"></div> 루트 정보를 불러오고 있어요...
+          </div>
+          <div v-else-if="error" class="status-msg error">{{ error }}</div>
+
+          <div v-else-if="routes.length" class="route-grid">
+            <div v-for="r in recentRoutes" :key="r.id" class="route-card" @click="detailRoutes(r.id)">
+              <div class="route-card-img"><span class="route-tag">Saved</span></div>
+              <div class="route-card-body">
+                <h4 class="route-title">{{ r.title }}</h4>
+                <p class="route-desc">{{ r.description || '설명 없는 여행' }}</p>
+                <div class="route-meta">
+                  <span>#{{ r.id }}</span>
+                  <span>{{ r.created_at.slice(0, 10) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="empty-state">
+            <p>아직 저장된 여행이 없네요 텅 비었어요! 🏝️</p>
+            <button class="btn-outline" @click="router.push('/routes/recommend')">
+              첫 번째 여행 계획하기
+            </button>
+          </div>
+        </section>
+        <hr class="divider fade-element delay-200" />
+
+        <section class="recommend-section fade-element delay-200">
+          <div class="section-header">
+            <h3>✈️ 지금 떠나기 좋은 여행</h3>
+            <span class="more-link" style="cursor: pointer;">더보기 ></span>
+          </div>
+
+          <div class="route-grid">
+            <div 
+              v-for="r in recommendedRoutes" 
+              :key="r.id" 
+              class="route-card"
+              @click="detailRoutes(r.id)"
+            >
+              <div class="route-card-img recommend-gradient">
+                <span v-if="r.is_hot" class="route-tag hot">HOT 🔥</span>
+                <span v-else class="route-tag recommend">AI Pick</span>
+              </div>
+              
+              <div class="route-card-body">
+                <h4 class="route-title">{{ r.title }}</h4>
+                <p class="route-desc">{{ r.description }}</p>
+                <div class="route-meta">
+                  <span>조회수 1.2k</span> <span>{{ r.created_at }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <hr />
-
-      <h3>최근 저장한 루트</h3>
-
-      <p v-if="loading">불러오는 중...</p>
-      <p v-else-if="error" class="error">{{ error }}</p>
-
-      <ul v-else-if="routes.length" class="list">
-        <li v-for="r in recentRoutes" :key="r.id" @click="detailRoutes(r.id)" class="item">
-          <div class="title">{{ r.title }}</div>
-          <div class="desc">{{ r.description || '설명 없음' }}</div>
-          <div class="meta">#{{ r.id }} · {{ r.created_at.slice(0, 10) }}</div>
-        </li>
-        <RouterLink to="/mypage?tab=routes" class="btn">저장한 경로 더보기</RouterLink>
-      </ul>
-
-      <p v-else>아직 저장된 루트가 없습니다. 추천을 받아보세요!</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/client'
 import { useRouter } from 'vue-router'
+import NavVar from '@/components/NavVar.vue' // ✅ 컴포넌트 임포트
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const me = ref(null)
 const routes = ref([])
-// 최근 3개만 자르기
 const recentRoutes = computed(() => routes.value.slice(0, 3))
 const loading = ref(false)
 const error = ref('')
 
+// ... 기존 import 문들 아래에 ...
+
+// [추가] 추천 루트 데이터 (나중에 API 연결 시 빈 배열로 바꾸고 fetch 로직 넣으세요)
+const recommendedRoutes = ref([
+  { 
+    id: 101, 
+    title: '제주도 3박 4일 힐링 코스 🍊', 
+    description: '서귀포 바다를 보며 멍때리기 좋은 카페 투어', 
+    created_at: '2025-01-15', 
+    is_hot: true // 뱃지용 플래그
+  },
+  { 
+    id: 102, 
+    title: '부산 식도락 완전 정복 🌊', 
+    description: '국밥부터 밀면까지, 쉴 틈 없이 먹는 일정', 
+    created_at: '2025-01-20',
+    is_hot: true 
+  },
+  { 
+    id: 103, 
+    title: '경주 야경 산책 🌙', 
+    description: '첨성대와 동궁과 월지, 밤에 더 빛나는 경주', 
+    created_at: '2025-02-01', 
+    is_hot: false 
+  }
+])
+
+// ... 기존 onMounted 등 ...
+
+let observer = null
+
+// 상세 페이지 이동
+const detailRoutes = (routeId) => {
+  router.push({ name: "route-detail", params: { routeId: routeId } })
+}
 
 onMounted(async () => {
+  // Intersection Observer (애니메이션)
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-element').forEach(el => observer.observe(el));
+
+  // 데이터 로딩 (로그인 시에만)
   if (!auth.isAuthenticated) return
 
   loading.value = true
@@ -71,35 +197,138 @@ onMounted(async () => {
       api.get('/auth/me/'),
       api.get('/routes/'),
     ])
-
     me.value = meRes.data
     routes.value = routesRes.data
   } catch (e) {
-    // 여기서 401이면 인터셉터가 refresh 시도 후 실패 시 logout까지 처리함
-    // (그래서 HomeView에서는 메시지만 보여줘도 됨)
-    error.value = '홈 데이터를 불러오지 못했습니다.'
     console.error(e)
+    error.value = '데이터를 불러오지 못했습니다.'
   } finally {
     loading.value = false
   }
 })
 
-// 사용자가 루트를 클릭하면 해당 루트 상세조회 페이지로 이동
-const detailRoutes = function (routeId) {
-  router.push({name: "route-detail", params: { routeId: routeId }})
-}
-
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <style scoped>
-.home { max-width: 860px; margin: 0 auto; }
-.card { border: 1px solid #eee; border-radius: 12px; padding: 16px; }
-.actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.btn { border: 1px solid #ddd; padding: 8px 10px; border-radius: 10px; text-decoration: none; color: inherit; }
-.list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px; }
-.item { border: 1px solid #f0f0f0; border-radius: 10px; padding: 12px; cursor: pointer; }
-.title { font-weight: 700; }
-.desc { color: #555; margin-top: 4px; }
-.meta { color: #888; font-size: 12px; margin-top: 6px; }
-.error { color: #dc2626; }
+/* 네브바 관련 스타일은 제거됨 (Navbar.vue로 이동) */
+
+.triple-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", Roboto, sans-serif;
+  color: #333;
+  padding-top: 60px; /* Navbar 높이만큼 여백 확보 */
+  min-height: 100vh;
+}
+
+/* 애니메이션 */
+.fade-element { opacity: 0; transform: translateY(20px); transition: 0.8s ease; }
+.fade-element.visible { opacity: 1; transform: translateY(0); }
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+
+/* 1. 비로그인 (랜딩) 스타일 */
+.hero-section {
+  position: relative; height: 70vh;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80');
+  background-size: cover; background-position: center;
+}
+.hero-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+.hero-text { position: relative; z-index: 1; color: white; }
+.hero-text h1 { font-size: 3rem; margin-bottom: 20px; font-weight: 800; line-height: 1.2; }
+.hero-text p { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+.cta-button {
+  background: #2cb398; color: white; padding: 15px 40px; border-radius: 30px; border: none;
+  font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;
+}
+.cta-button:hover { transform: scale(1.05); }
+
+.features-section {
+  display: flex; justify-content: center; gap: 40px; padding: 60px 20px; background: #fff;
+  flex-wrap: wrap; text-align: center;
+}
+.feature-item { max-width: 250px; }
+.feature-item .icon { font-size: 2.5rem; margin-bottom: 10px; }
+.feature-item h3 { font-size: 1.2rem; margin-bottom: 8px; color: #333; }
+.feature-item p { color: #888; line-height: 1.5; font-size: 0.95rem; }
+
+/* 2. 로그인 (대시보드) 스타일 */
+.dashboard-view { background-color: #f9f9f9; min-height: calc(100vh - 60px); padding: 40px 20px; }
+.content-wrapper { max-width: 860px; margin: 0 auto; }
+
+.dashboard-header { margin-bottom: 40px; }
+.dashboard-header h2 { font-size: 2rem; margin-bottom: 30px; line-height: 1.3; color: #111; }
+.dashboard-header b { color: #2cb398; }
+
+.action-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.action-card {
+  background: white; border-radius: 16px; padding: 24px; cursor: pointer;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.2s; border: 1px solid transparent;
+}
+.action-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+.action-card.primary { border: 1px solid #2cb398; background: #f0fffc; }
+.card-icon { font-size: 2rem; }
+.card-text h3 { font-size: 1.1rem; margin-bottom: 4px; color: #333; }
+.card-text p { font-size: 0.9rem; color: #888; }
+
+.divider { border: 0; height: 1px; background: #eee; margin: 40px 0; }
+
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.section-header h3 { font-size: 1.4rem; font-weight: 700; color: #333; }
+.more-link { font-size: 0.9rem; color: #888; text-decoration: none; }
+.more-link:hover { color: #2cb398; }
+
+.route-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.route-card {
+  background: white; border-radius: 12px; overflow: hidden; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s;
+}
+.route-card:hover { transform: translateY(-5px); }
+.route-card-img {
+  height: 140px; background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+  position: relative;
+}
+.route-tag {
+  position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); color: white;
+  font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; font-weight: bold;
+}
+.route-card-body { padding: 16px; }
+.route-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-desc { font-size: 0.9rem; color: #666; margin-bottom: 12px; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.route-meta { font-size: 0.8rem; color: #999; display: flex; gap: 8px; }
+
+.empty-state { text-align: center; padding: 40px; background: white; border-radius: 12px; color: #888; border: 1px dashed #ddd; }
+.btn-outline { margin-top: 15px; padding: 10px 20px; background: white; border: 1px solid #2cb398; color: #2cb398; border-radius: 20px; cursor: pointer; }
+.btn-outline:hover { background: #2cb398; color: white; }
+
+.status-msg { text-align: center; padding: 40px; color: #666; }
+.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #ccc; border-top-color: #2cb398; border-radius: 50%; animation: spin 1s infinite linear; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  .hero-text h1 { font-size: 2rem; }
+  .dashboard-header h2 { font-size: 1.5rem; }
+}
+/* 추천 루트 전용 그라데이션 (저장된 루트와 구분) */
+.recommend-gradient {
+  background: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%);
+}
+
+/* 태그 스타일 커스텀 */
+.route-tag.hot {
+  background-color: #ff5252; /* 빨간색 강조 */
+}
+
+.route-tag.recommend {
+  background-color: #764ba2; /* 보라색 AI 느낌 */
+}
+
+/* (선택) 카드 호버 시 약간 더 띄우기 */
+.route-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
 </style>

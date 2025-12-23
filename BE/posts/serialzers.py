@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Post, Comment
 from routes.models import Route
 from routes.serializers import RouteSerializer
+from accounts.serializers import MeSerializer
 
 class CommentSerializer(serializers.ModelSerializer):
     """
@@ -32,11 +33,13 @@ class PostListSerailizer(serializers.ModelSerializer):
     # 요청 유저 기준으로 좋아요 여부 산출
     is_liked = serializers.SerializerMethodField()
 
+    # 작성자 정보 조회
+    user = MeSerializer(read_only=True)
     class Meta:
         model = Post
         fields = [
             "id", "title", "content", "created_at", "updated_at",
-            "like_count", "is_liked", "comment_count", "route",
+            "like_count", "is_liked", "comment_count", "route", "user"
         ]
 
     def get_is_liked(self, obj):
@@ -65,11 +68,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()
     route = RouteSerializer(read_only=True)
 
+    # 유저 정보 같이 넘겨줌
+    user = MeSerializer(read_only=True)
+    
     class Meta:
         model = Post
         fields = [
             "id", "title", "content", "created_at", "updated_at",
-            "like_count", "is_liked", "writed_comments", "route",
+            "like_count", "is_liked", "writed_comments", "route", "user",
         ]
 
     def get_like_count(self, obj):
