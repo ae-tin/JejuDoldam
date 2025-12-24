@@ -668,10 +668,9 @@ class RandomRoutePlaceAPIView(APIView):
             .order_by("?")
             .first()
         )
-
+        print(random_place)
         # 사진 있는 장소가 하나도 없을 경우 처리
         if not random_place:
-            print(random_place)
             return Response({"photo_url": None})
             # return Response({"message": "사진이 등록된 장소가 없습니다."}, status=404)
 
