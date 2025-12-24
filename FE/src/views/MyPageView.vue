@@ -93,8 +93,6 @@ const tabs = [
   { key: 'routes', label: '저장한 경로', comp: MyPageRoutes },
   { key: 'posts', label: '내 게시글', comp: MyPagePosts },
   { key: 'likes', label: '좋아요', comp: MyLikeList }, // ✅ 여기에 좋아요 컴포넌트 연결
-  { key: 'followers', label: '팔로워', comp: null },   // 아직 기능 구현 전
-  { key: 'following', label: '팔로잉', comp: null },
   { key: 'settings', label: '프로필', comp: MyPageSettings },
 ]
 

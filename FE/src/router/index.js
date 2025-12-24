@@ -12,6 +12,7 @@ import CommunityPostListView from '@/views/CommunityPostListView.vue'
 import CommunityPostCreateView from '@/views/CommunityPostCreateView.vue'
 import CommunityPostDetailView from '@/views/CommunityPostDetailView.vue'
 import CommunityPostUpdateView from '@/views/CommunityPostUpdateView.vue'
+import KakaoCallback from '@/components/KakaoCallback.vue'
 
 
 const router = createRouter({
@@ -62,7 +63,7 @@ const router = createRouter({
       component: RouteListView,
       meta: { requiresAuth: true},
     },
-     { 
+      { 
       path: '/community', 
       name: 'community-list', 
       component: CommunityPostListView, 
@@ -86,21 +87,49 @@ const router = createRouter({
       component: CommunityPostUpdateView,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/auth/kakao/callback',
+      name: 'KakaoCallback',
+      component: KakaoCallback,
+    },
   ],
 })
 
-router.beforeEach((to, from, next) => {
+// ✅ async 추가 (fetchUser 대기용)
+router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
+
+  // [1] 유저 정보 복구 로직
+  // 새로고침 등으로 Pinia state가 비었을 때, 토큰이 있다면 유저 정보를 다시 가져옴
+  const token = localStorage.getItem('access')
+  if (token && !auth.user) {
+    try {
+      await auth.fetchUser() // is_setting 포함된 정보 로드
+    } catch (error) {
+      console.error('사용자 정보 로드 실패', error)
+    }
+  }
+
   const isLoggedIn = auth.isAuthenticated
 
-  // 1) 로그인이 필요한데 안 되어 있으면 → 로그인 페이지로 (next 파라미터 포함)
+  // [2] 로그인 필요 페이지 접근 제어
   if (to.meta.requiresAuth && !isLoggedIn) {
     return next({ name: 'login', query: { next: to.fullPath } })
   }
 
-  // 2) 이미 로그인 상태인데 signup/login 으로 가려 하면 → 홈으로
+  // [3] 로그인 상태에서 로그인/회원가입 페이지 접근 제어
   if ((to.name === 'login' || to.name === 'signup') && isLoggedIn) {
     return next({ name: 'home' })
+  }
+
+  // [4] ✅ 추가된 가드: 추천 페이지 접근 시 프로필 설정(is_setting) 확인
+  if (to.name === 'routes-recommend-input') {
+    // 유저 정보가 있고, is_setting이 false인 경우
+    if (auth.user && !auth.user.is_setting) {
+      alert('여행 취향 분석을 위해 프로필 설정이 필요합니다.\n설정 페이지로 이동합니다.')
+      // 마이페이지의 설정 탭으로 리다이렉트 (query는 MyPageView 구현에 맞춤)
+      return next({ name: 'mypage', query: { tab: 'settings' } })
+    }
   }
 
   return next()

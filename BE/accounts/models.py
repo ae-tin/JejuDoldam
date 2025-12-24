@@ -68,14 +68,16 @@ class User(AbstractUser):
     ]
 
     # --- fields ---
-    birth_date = models.DateField()  # 생년월일(연령대는 서버에서 계산)
+    birth_date = models.DateField(null=True, blank=True)  # 생년월일(연령대는 서버에서 계산)
 
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    marriage_status = models.CharField(max_length=10, choices=MARRIAGE_CHOICES)
-    job = models.CharField(max_length=30, choices=JOB_CHOICES)
-    income = models.CharField(max_length=40, choices=INCOME_CHOICES)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
+    marriage_status = models.CharField(max_length=10, choices=MARRIAGE_CHOICES ,null=True, blank=True)
+    job = models.CharField(max_length=30, choices=JOB_CHOICES ,null=True, blank=True)
+    income = models.CharField(max_length=40, choices=INCOME_CHOICES ,null=True, blank=True)
 
-    travel_num = models.PositiveSmallIntegerField()  # 연간 여행 빈도(숫자는 그대로 저장)
-    residence = models.CharField(max_length=20, choices=RESIDENCE_CHOICES)
+    travel_num = models.PositiveSmallIntegerField(null=True, blank=True)  # 연간 여행 빈도(숫자는 그대로 저장)
+    residence = models.CharField(max_length=20, choices=RESIDENCE_CHOICES ,null=True, blank=True)
+    # 사용자가 프로필 입력을 완료했는지 여부
+    is_setting = models.BooleanField(default=False)
 
     

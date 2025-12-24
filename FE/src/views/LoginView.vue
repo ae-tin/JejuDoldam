@@ -42,6 +42,11 @@
         </button>
       </form>
 
+      <div class="kakao-btn" @click="kakaoLogin">
+        <span class="kakao-symbol">💬</span>
+        <span>카카오 로그인</span>
+      </div>
+
       <div class="footer-links">
         <p>
           아직 계정이 없으신가요?
@@ -67,6 +72,23 @@ const password = ref('');
 const loading = ref(false);
 const error = ref('');
 
+// [추가됨] 카카오 로그인 로직
+const kakaoLogin = async () => {
+  try {
+    // 1. 백엔드에 "카카오 로그인 URL 좀 줘" 라고 요청
+    // (URL 경로는 백엔드 urls.py 설정에 맞춰 수정하세요. 예: /auth/kakao/login-url/)
+    const response = await api.get('/auth/kakao/url/');
+    
+    // 2. 받아온 카카오 인증 URL로 브라우저 이동
+    if (response.data.url) {
+      window.location.href = response.data.url;
+    }
+  } catch (err) {
+    console.error('카카오 로그인 URL 로드 실패:', err);
+    alert('카카오 로그인 서버에 연결할 수 없습니다.');
+  }
+};
+
 const handleSubmit = async () => {
   error.value = '';
   loading.value = true;
@@ -81,10 +103,7 @@ const handleSubmit = async () => {
     // 2) Pinia에 토큰 저장
     auth.login(data.access, data.refresh);
 
-    // UX 개선: alert 대신 부드러운 전환을 원하시면 이 줄은 삭제하셔도 됩니다.
-    // alert(`로그인 성공! 안녕, ${username.value}`);
-
-    // 3) 페이지 이동 (이전 페이지 or 홈)
+    // 3) 페이지 이동
     const nextPath = route.query.next;
     if (typeof nextPath === 'string') {
       router.push(nextPath);
@@ -94,7 +113,6 @@ const handleSubmit = async () => {
 
   } catch (err) {
     console.error(err);
-    // 구체적인 에러 처리 (필요시)
     if (err.response && err.response.status === 401) {
       error.value = '아이디 또는 비밀번호가 일치하지 않습니다.';
     } else {
@@ -107,28 +125,26 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-/* 화면 중앙 정렬 및 배경 */
+/* 기존 스타일 그대로 유지 */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f7fa; /* 밝은 회색 배경 */
+  background-color: #f5f7fa; 
   padding: 20px;
 }
 
-/* 카드 스타일 */
 .login-card {
   width: 100%;
   max-width: 420px;
   background: white;
   padding: 40px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); /* 부드러운 그림자 */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
-/* 텍스트 스타일 */
 .text-center { text-align: center; }
 .mb-6 { margin-bottom: 24px; }
 
@@ -153,7 +169,6 @@ const handleSubmit = async () => {
   font-size: 0.95rem;
 }
 
-/* 폼 스타일 */
 .input-group {
   margin-bottom: 20px;
   text-align: left;
@@ -175,10 +190,9 @@ const handleSubmit = async () => {
   border-radius: 8px;
   background-color: #fafafa;
   transition: all 0.2s ease;
-  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  box-sizing: border-box;
 }
 
-/* 인풋 포커스 효과 (민트색) */
 .input-group input:focus {
   border-color: #2cb398;
   background-color: #fff;
@@ -191,7 +205,6 @@ const handleSubmit = async () => {
   background-color: #fff5f5;
 }
 
-/* 버튼 스타일 */
 .submit-btn {
   width: 100%;
   padding: 14px;
@@ -223,7 +236,6 @@ const handleSubmit = async () => {
   cursor: not-allowed;
 }
 
-/* 에러 메시지 */
 .error-msg {
   color: #e74c3c;
   font-size: 0.9rem;
@@ -234,7 +246,6 @@ const handleSubmit = async () => {
   border-radius: 6px;
 }
 
-/* 하단 링크 */
 .footer-links {
   margin-top: 24px;
   text-align: center;
@@ -253,7 +264,6 @@ const handleSubmit = async () => {
   text-decoration: underline;
 }
 
-/* 로딩 스피너 */
 .spinner {
   width: 16px;
   height: 16px;
@@ -267,7 +277,6 @@ const handleSubmit = async () => {
   to { transform: rotate(360deg); }
 }
 
-/* 등장 애니메이션 */
 .fade-in {
   animation: fadeInUp 0.5s ease-out;
 }
@@ -283,11 +292,41 @@ const handleSubmit = async () => {
   }
 }
 
-/* 반응형 모바일 */
+/* [추가됨] 카카오 로그인 버튼 스타일 */
+.kakao-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px; /* 일반 로그인 버튼과의 간격 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #381e1f; /* 카카오 글자색 (짙은 갈색) */
+  background-color: #fee500; /* 카카오 공식 노란색 */
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s, transform 0.1s;
+  box-sizing: border-box;
+}
+
+.kakao-btn:hover {
+  background-color: #fada0a; /* 호버 시 약간 진해짐 */
+}
+
+.kakao-btn:active {
+  transform: scale(0.98);
+}
+
+.kakao-symbol {
+  font-size: 1.2rem;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
-    box-shadow: none; /* 모바일엔 그림자 제거하고 플랫하게 */
+    box-shadow: none;
     background: transparent;
   }
   .login-container {
@@ -296,7 +335,7 @@ const handleSubmit = async () => {
     padding-top: 60px;
   }
   .input-group input {
-    font-size: 16px; /* iOS 자동확대 방지 */
+    font-size: 16px;
   }
 }
 </style>

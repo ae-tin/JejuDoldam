@@ -18,13 +18,14 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = [
             "username",
             "password",
-            "birth_date",
-            "gender",
-            "marriage_status",
-            "job",
-            "income",
-            "travel_num",
-            "residence",
+            # 카카오 로그인을 위한 임시 삭제
+            # "birth_date",
+            # "gender",
+            # "marriage_status",
+            # "job",
+            # "income",
+            # "travel_num",
+            # "residence",
         ]
 
     def validate_username(self, value):
@@ -37,21 +38,22 @@ class SignupSerializer(serializers.ModelSerializer):
         # 아니라면 사용자가 입력한 username 을 반환함
         return value
     
-    def validate_birth_date(self, value):
-        """
-        생년월일의 유효성 검사 메서드
-        """
-        if value > date.today():
-            raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
-        return value
+    # 카카오 로그인을 위한 임시 삭제
+    # def validate_birth_date(self, value):
+    #     """
+    #     생년월일의 유효성 검사 메서드
+    #     """
+    #     if value > date.today():
+    #         raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
+    #     return value
     
-    def validate_travel_num(self, value):
-        # 허용값은 우선 임의로 설정
-        # TODO 여행 빈도값 확정 후 재작성 필요
-        allowed = {1,2,3,4,5,6,7,8,9,10,11,12,15,20,25,30}
-        if value not in allowed:
-            raise serializers.ValidationError("연간 여행 빈도 값이 허용 범위가 아닙니다.")
-        return value
+    # def validate_travel_num(self, value):
+    #     # 허용값은 우선 임의로 설정
+    #     # TODO 여행 빈도값 확정 후 재작성 필요
+    #     allowed = {1,2,3,4,5,6,7,8,9,10,11,12,15,20,25,30}
+    #     if value not in allowed:
+    #         raise serializers.ValidationError("연간 여행 빈도 값이 허용 범위가 아닙니다.")
+    #     return value
 
     def create(self, validated_data):
         """
@@ -69,6 +71,77 @@ class SignupSerializer(serializers.ModelSerializer):
         # 최종적으로 DB에 반영
         user.save()
         return user
+    
+
+class UserInfoSettingSerializer(serializers.ModelSerializer):
+    # 최초 로그인 후 유저 정보 세팅
+    class Meta:
+        model = User
+        fields = [
+            "birth_date",
+            "gender",
+            "marriage_status",
+            "job",
+            "income",
+            "travel_num",
+            "residence",
+            "is_setting"
+        ]
+        read_only_fields = ["is_setting", ]
+        
+    def validate_birth_date(self, value):
+        """
+        생년월일의 유효성 검사 메서드
+        """
+        if value > date.today():
+            raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
+        return value
+    
+    def validate_travel_num(self, value):
+        # 허용값은 우선 임의로 설정
+        allowed = {1,2,3,4,5,6,7,8,9,10,11,12,15,20,25,30}
+        if value not in allowed:
+            raise serializers.ValidationError("연간 여행 빈도 값이 허용 범위가 아닙니다.")
+        return value
+    
+    def update(self, instance, validated_data):
+        print(validated_data)
+        if len(validated_data) != 7:
+            raise serializers.ValidationError("입력값이 유효하지 않습니다.")
+        return super().update(instance, validated_data)
+    
+    
+    def validate_gender(self, value):
+        print('dd')
+        if not value or value == "":
+            raise serializers.ValidationError("성별을 입력하세요.")
+        return value
+    
+    def validate_marriage_status(self, value):
+        if not value or value == "":
+            raise serializers.ValidationError("결혼 정보를 입력하세요.")
+        return value
+    
+    def validate_job(self, value):
+        if not value or value == "":
+            raise serializers.ValidationError("직업 정보를 입력하세요.")
+        return value
+    
+    def validate_income(self, value):
+        if not value or value == "":
+            raise serializers.ValidationError("소득 정보를 입력하세요.")
+        return value
+    
+    def validate_travel_num(self, value):
+        if not value or value == "":
+            raise serializers.ValidationError("여행 빈도 정보를 입력하세요.")
+        return value
+    
+    def validate_residence(self, value):
+        if not value or value == "":
+            raise serializers.ValidationError("주거 정보를 입력하세요.")
+        return value
+    
     
 
 class LoginSirializer(serializers.Serializer):
@@ -112,8 +185,9 @@ class MeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ["id", "username", "birth_date", "marriage_status", "job", "income", "travel_num", "residence", "gender",]
-        read_only_fields = ["id", "username",]
+        fields = ["id", "username", "birth_date", "marriage_status", "job", "income", "travel_num", "residence", "gender",
+                  "is_setting", ]
+        read_only_fields = ["id", "username", "is_setting", ]
         
         
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
