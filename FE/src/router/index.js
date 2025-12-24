@@ -12,6 +12,7 @@ import CommunityPostListView from '@/views/CommunityPostListView.vue'
 import CommunityPostCreateView from '@/views/CommunityPostCreateView.vue'
 import CommunityPostDetailView from '@/views/CommunityPostDetailView.vue'
 import CommunityPostUpdateView from '@/views/CommunityPostUpdateView.vue'
+import KakaoCallback from '@/components/KakaoCallback.vue'
 
 
 const router = createRouter({
@@ -85,6 +86,11 @@ const router = createRouter({
       name: 'community-edit',
       component: CommunityPostUpdateView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/auth/kakao/callback',
+      name: 'KakaoCallback',
+      component: KakaoCallback,
     },
   ],
 })

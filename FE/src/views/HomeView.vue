@@ -103,7 +103,7 @@
             <h3>✈️ 지금 떠나기 좋은 여행</h3>
           </div>
 
-          <div class="route-grid">
+          <!-- <div class="route-grid">
             <div 
               v-for="(r, idx) in recommendedRoutes" 
               :key="r.id" 
@@ -125,7 +125,7 @@
                 <p class="route-desc">{{ r.description }}</p>
               </div>
             </div>
-          </div>
+          </div> -->
         </section>
 
       </div>
@@ -170,15 +170,15 @@ const selectRecommendedRoute = (index) => {
   })
 }
 
-async function fetchRecommendedRoutes() {
-  try {
-    const { data } = await api.get('/routes/recommend/')
-    recommendedRoutes.value = data || []
-  } catch (e) {
-    console.error('추천 루트 로딩 실패', e)
-    recommendedRoutes.value = []
-  }
-}
+// async function fetchRecommendedRoutes() {
+//   try {
+//     const { data } = await api.get('/routes/recommend/')
+//     recommendedRoutes.value = data || []
+//   } catch (e) {
+//     console.error('추천 루트 로딩 실패', e)
+//     recommendedRoutes.value = []
+//   }
+// }
 
 const bgStyle = (url) => ({
   backgroundImage: `url(${url})`,

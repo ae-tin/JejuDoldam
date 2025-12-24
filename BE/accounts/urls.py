@@ -14,4 +14,11 @@ urlpatterns = [
 
     # 회원 정보 조회, 수정
     path("me/", views.MeAPIView.as_view()),
+    
+    # 카카오 로그인/회원가입
+    path("kakao/", views.KakaoLoginAPIView.as_view()),
+    
+    # 카카오 로그인 url 반환
+    path("kakao/url/", views.KakaoLoginUrlAPIView.as_view()),
+    
 ]
