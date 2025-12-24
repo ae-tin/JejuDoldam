@@ -11,12 +11,7 @@
       <RouterLink class="btn-retry" to="/routes/recommend">다시 시도</RouterLink>
     </div>
 
-    <div 
-      v-else-if="selectedRoute" 
-      class="split-view"
-      @mousemove="onResize"
-    >
-      
+    <div v-else-if="selectedRoute" class="split-view" @mousemove="onResize">
       <aside class="left-panel" :style="{ width: panelWidth + 'px' }">
         <div v-if="results.length" class="panel-top-tabs">
           <button
@@ -59,7 +54,6 @@
         </div>
 
         <div class="place-list-container">
-          
           <div class="search-section">
             <KakaoPlaceSearch @select="addPlaceToSelectedDay" />
           </div>
@@ -115,7 +109,6 @@
       <main class="right-map">
         <KakaoMap :places="dayPlaces" class="full-map" />
       </main>
-
     </div>
 
     <div v-else-if="!loading" class="state-overlay empty">
@@ -127,9 +120,6 @@
 </template>
 
 <script setup>
-// =================================================================
-// [로직 변경 없음] 기존 기능을 100% 유지합니다.
-// =================================================================
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import api from '@/api/client'
@@ -225,28 +215,42 @@ function selectRoute(idx) {
 
 function toEditableRoute(r) {
   const days = Number(r.days ?? r.HOW_LONG ?? recommendPayload.value.HOW_LONG ?? 1)
-  const daysData = Array.from({ length: days }, (_, i) => ({
-    day: i + 1,
-    places: [],
-  }))
+  
+  // 이미 daysData 구조가 잡혀있으면 그대로 쓰고, 아니면 places 배열을 기반으로 생성
+  let daysData = r.daysData
+  
+  if (!daysData) {
+    daysData = Array.from({ length: days }, (_, i) => ({
+      day: i + 1,
+      places: [],
+    }))
 
-  for (const p of r.places || []) {
-    const day = Number(p.day ?? 1)
-    const target = daysData[day - 1]
-    if (!target) continue
-    target.places.push({
-      _uid: genUid(),
-      order: p.order ?? target.places.length + 1,
-      name: p.name,
-      address: p.address ?? '',
-      latitude: p.latitude ?? null,
-      longitude: p.longitude ?? null,
-      photo_url: p.photo_url ?? '',
-      place_url: p.place_url ?? '',
-      place_cat: p.place_cat ?? '',
-      memo: p.memo ?? '',
+    for (const p of r.places || []) {
+      const day = Number(p.day ?? 1)
+      const target = daysData[day - 1]
+      if (!target) continue
+      target.places.push({
+        _uid: genUid(),
+        order: p.order ?? target.places.length + 1,
+        name: p.name,
+        address: p.address ?? '',
+        latitude: p.latitude ?? null,
+        longitude: p.longitude ?? null,
+        photo_url: p.photo_url ?? '',
+        place_url: p.place_url ?? '',
+        place_cat: p.place_cat ?? '',
+        memo: p.memo ?? '',
+      })
+    }
+  } else {
+    // 이미 daysData가 있어도 _uid는 생성해줘야 UI에서 키로 사용 가능
+    daysData.forEach(day => {
+      day.places.forEach(p => {
+        if (!p._uid) p._uid = genUid()
+      })
     })
   }
+
   for (const d of daysData) normalizeOrders(d)
   return { ...r, days, daysData }
 }
@@ -293,7 +297,25 @@ function movePlace(idx, dir) {
   normalizeOrders(dayObj)
 }
 
+// ✅ [수정됨] 데이터 fetch 로직
 async function fetchRecommendations() {
+  // 1. HomeView 등에서 전체 루트 리스트(passedRoutes)를 넘겨줬는지 확인
+  const state = history.state
+  if (state && state.passedRoutes) {
+    try {
+      // 전달받은 3개의 루트를 모두 에디터블하게 변환하여 results에 저장
+      results.value = state.passedRoutes.map(r => toEditableRoute(r))
+      // 사용자가 클릭했던 루트(인덱스)를 기본 선택으로 설정
+      selectedRouteIndex.value = state.initialIndex || 0
+      selectedDay.value = 1
+      return // API 호출 없이 바로 종료 (데이터 재활용)
+    } catch (e) {
+      console.error("전달받은 데이터 처리 중 오류:", e)
+      error.value = "데이터를 불러오는 중 오류가 발생했습니다."
+    }
+  }
+
+  // 2. 전달받은 데이터가 없으면 기존 로직 (Query String 기반 API 호출) 실행
   error.value = ''
   results.value = []
   selectedRouteIndex.value = 0
@@ -346,8 +368,6 @@ function mapRouteToConfirmPayload(routeObj) {
         address: p.address ?? '',
         latitude: p.latitude ?? null,
         longitude: p.longitude ?? null,
-        photo_url: p.photo_url ?? '',
-        place_url: p.place_url ?? '',
         memo: p.memo ?? '',
       })),
     })),
@@ -364,10 +384,7 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
 </script>
 
 <style scoped>
-/* [페이지 레이아웃]
-  - padding-top: 60px; (전역 Navbar 높이만큼 여백 확보)
-  - height: 100vh; (화면 꽉 채움)
-*/
+/* (기존 스타일 그대로 유지) */
 .pc-layout-container {
   display: flex;
   flex-direction: column;
@@ -378,13 +395,11 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
   box-sizing: border-box; /* 패딩 포함 높이 계산 */
 }
 
-/* [스플릿 뷰]
-  - 부모(pc-layout-container)의 남은 높이를 모두 채웁니다.
-*/
+/* [스플릿 뷰] */
 .split-view {
   display: flex;
   flex: 1; 
-  height: 100%; /* 부모의 남은 공간 100% 사용 */
+  height: 100%; 
   overflow: hidden;
 }
 
@@ -402,7 +417,7 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
   max-width: 800px;
 }
 
-/* ✅ [수정됨] 감각적인 추천 루트 탭 스타일 (Segmented Control) */
+/* ✅ 감각적인 추천 루트 탭 스타일 (Segmented Control) */
 .panel-top-tabs {
   display: flex;
   background-color: #f2f4f6; /* 은은한 회색 배경 트랙 */
