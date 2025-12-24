@@ -45,7 +45,7 @@
     <div v-else class="empty-state">
       <div class="icon">📝</div>
       <p>아직 작성한 여행기가 없어요.<br>나만의 여행 이야기를 들려주세요!</p>
-      <button class="btn-write" @click="router.push('/community/new')">
+      <button class="btn-action" @click="router.push('/community/new')">
         첫 글 작성하러 가기
       </button>
     </div>
@@ -280,6 +280,10 @@ onMounted(() => {
   animation: spin 1s infinite linear;
   margin-right: 8px;
   vertical-align: middle;
+}
+.btn-action {
+  margin-top: 20px; background-color: #333; color: white; border: none;
+  padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

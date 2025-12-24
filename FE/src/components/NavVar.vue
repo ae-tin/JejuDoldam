@@ -10,6 +10,7 @@
 
       <div v-else class="nav-actions">
         <span class="user-greeting" v-if="auth.user">{{ auth.user.username }}님</span>
+        <RouterLink to="/community" class="nav-link">커뮤니티</RouterLink>
         <RouterLink to="/mypage" class="nav-link">마이페이지</RouterLink>
         <button @click="handleLogout" class="nav-link logout-btn">로그아웃</button>
       </div>
