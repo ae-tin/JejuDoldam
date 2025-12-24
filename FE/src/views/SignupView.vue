@@ -3,7 +3,7 @@
     <div class="signup-content fade-element">
       
       <header class="page-header">
-        <h1 class="logo" @click="router.push('/')">MyTrip</h1>
+        <h1 class="logo" @click="router.push('/')">JejuDoldam</h1>
         <h2>환영합니다! 👋</h2>
         <p class="sub-text">회원가입하고 나만의 여행 지도를 완성해보세요.</p>
       </header>
@@ -46,104 +46,16 @@
 
         <hr class="divider" />
 
-        <!-- <section class="form-section">
-          <h3 class="section-title">개인 정보</h3>
-
-          <div class="row-group">
-            <div class="input-group half">
-              <label>생년월일</label>
-              <input 
-                v-model="form.birth_date" 
-                type="date" 
-                class="custom-input"
-                :class="{ 'has-error': fieldErrors.birth_date }"
-              />
-              <p v-if="fieldErrors.birth_date" class="field-error">{{ fieldErrors.birth_date }}</p>
-            </div>
-
-            <div class="input-group half">
-              <label>성별</label>
-              <div class="gender-options">
-                <label class="gender-btn" :class="{ active: form.gender === '남' }">
-                  <input type="radio" value="남" v-model="form.gender" /> 남성
-                </label>
-                <label class="gender-btn" :class="{ active: form.gender === '여' }">
-                  <input type="radio" value="여" v-model="form.gender" /> 여성
-                </label>
-              </div>
-              <p v-if="fieldErrors.gender" class="field-error">{{ fieldErrors.gender }}</p>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>거주지</label>
-            <div class="select-wrapper">
-              <select v-model="form.residence" class="custom-select" :class="{ 'has-error': fieldErrors.residence }">
-                <option disabled value="">거주 지역을 선택해주세요</option>
-                <option v-for="x in residenceOptions" :key="x" :value="x">{{ x }}</option>
-              </select>
-            </div>
-            <p v-if="fieldErrors.residence" class="field-error">{{ fieldErrors.residence }}</p>
-          </div>
-        </section>
-
-        <hr class="divider" />
-
-        <section class="form-section">
-          <h3 class="section-title">여행 취향 분석용</h3>
-          
-          <div class="input-group">
-            <label>혼인상태</label>
-            <div class="select-wrapper">
-              <select v-model="form.marriage_status" class="custom-select">
-                <option disabled value="">선택해주세요</option>
-                <option v-for="x in marriageOptions" :key="x" :value="x">{{ x }}</option>
-              </select>
-            </div>
-            <p v-if="fieldErrors.marriage_status" class="field-error">{{ fieldErrors.marriage_status }}</p>
-          </div>
-
-          <div class="input-group">
-            <label>직업</label>
-            <div class="select-wrapper">
-              <select v-model="form.job" class="custom-select">
-                <option disabled value="">직군을 선택해주세요</option>
-                <option v-for="x in jobOptions" :key="x" :value="x">{{ x }}</option>
-              </select>
-            </div>
-            <p v-if="fieldErrors.job" class="field-error">{{ fieldErrors.job }}</p>
-          </div>
-
-          <div class="row-group">
-            <div class="input-group half">
-              <label>소득 구간</label>
-              <div class="select-wrapper">
-                <select v-model="form.income" class="custom-select">
-                  <option disabled value="">선택</option>
-                  <option v-for="x in incomeOptions" :key="x" :value="x">{{ x }}</option>
-                </select>
-              </div>
-              <p v-if="fieldErrors.income" class="field-error">{{ fieldErrors.income }}</p>
-            </div>
-
-            <div class="input-group half">
-              <label>연간 여행 횟수</label>
-              <div class="select-wrapper">
-                <select v-model.number="form.travel_num" class="custom-select">
-                  <option disabled value="">선택</option>
-                  <option v-for="n in travelNumOptions" :key="n" :value="n">{{ n }}회</option>
-                </select>
-              </div>
-              <p v-if="fieldErrors.travel_num" class="field-error">{{ fieldErrors.travel_num }}</p>
-            </div>
-          </div>
-        </section> -->
-
         <div class="action-area">
           <button class="submit-btn" type="submit" :disabled="loading">
             <span v-if="loading" class="spinner"></span>
             {{ loading ? '가입 처리 중...' : '회원가입 완료' }}
           </button>
+
+          <div class="kakao-btn" @click="kakaoLogin">
+            <span class="kakao-symbol">💬</span>
+            <span>카카오로 3초 만에 시작하기</span>
+          </div>
           
           <p class="login-link">
             이미 계정이 있으신가요? 
@@ -182,6 +94,22 @@ const fieldErrors = reactive({
   marriage_status: '', job: '', income: '', travel_num: '', residence: '',
 })
 
+// [추가됨] 카카오 로그인 요청 함수 (로그인 페이지와 동일)
+const kakaoLogin = async () => {
+  try {
+    // 1. 백엔드에 카카오 URL 요청
+    const response = await api.get('/auth/kakao/url/'); 
+    
+    // 2. 해당 URL로 이동 (카카오 동의 화면)
+    if (response.data.url) {
+      window.location.href = response.data.url;
+    }
+  } catch (err) {
+    console.error('카카오 연결 실패:', err);
+    alert('카카오 서버에 연결할 수 없습니다.');
+  }
+};
+
 function resetErrors() {
   error.value = ''
   for (const k of Object.keys(fieldErrors)) fieldErrors[k] = ''
@@ -200,7 +128,7 @@ function applyDRFErrors(data) {
   }
 }
 
-// 옵션 데이터 (기존 유지)
+// 옵션 데이터들은 그대로 유지
 const marriageOptions = ['미혼', '기혼', '사별', '이혼', '기타']
 const jobOptions = [
   '관리자','전문가 및 관련 종사자','사무 종사자','서비스 종사자','판매 종사자',
@@ -242,7 +170,6 @@ const handleSubmit = async () => {
   }
 }
 
-// 등장 애니메이션
 onMounted(() => {
   setTimeout(() => {
     document.querySelector('.fade-element')?.classList.add('visible')
@@ -251,10 +178,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 컨테이너 */
+/* 기존 스타일 그대로 유지 */
 .signup-container {
   min-height: 100vh;
-  padding: 40px 20px 80px; /* Navbar 고려 여백 */
+  padding: 40px 20px 80px;
   background-color: #f5f7fa;
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", Roboto, sans-serif;
   color: #333;
@@ -265,7 +192,6 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-/* 헤더 */
 .page-header {
   text-align: center;
   margin-bottom: 30px;
@@ -281,7 +207,6 @@ onMounted(() => {
 .page-header h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
 .sub-text { color: #666; font-size: 0.95rem; }
 
-/* 폼 카드 */
 .signup-card {
   background: white;
   padding: 30px;
@@ -290,7 +215,6 @@ onMounted(() => {
   border: 1px solid #f0f0f0;
 }
 
-/* 섹션 구분 */
 .section-title {
   font-size: 0.9rem;
   color: #888;
@@ -302,7 +226,6 @@ onMounted(() => {
 
 .divider { border: 0; height: 1px; background: #eee; margin: 24px 0; }
 
-/* 입력 그룹 */
 .input-group { margin-bottom: 20px; }
 .input-group label {
   display: block;
@@ -315,7 +238,6 @@ onMounted(() => {
 .row-group { display: flex; gap: 12px; }
 .half { flex: 1; }
 
-/* Input & Select 공통 스타일 */
 .custom-input, .custom-select {
   width: 100%;
   padding: 12px 14px;
@@ -336,12 +258,9 @@ onMounted(() => {
 
 .has-error { border-color: #dc2626; background-color: #fff5f5; }
 
-/* 셀렉트박스 화살표 처리 */
 .select-wrapper { position: relative; }
-/* 브라우저 기본 화살표 스타일 제거 (선택사항) */
 .custom-select { appearance: auto; } 
 
-/* 성별 버튼 (Radio Custom) */
 .gender-options { display: flex; gap: 10px; }
 .gender-btn {
   flex: 1;
@@ -355,7 +274,7 @@ onMounted(() => {
   font-weight: 600;
   color: #666;
 }
-.gender-btn input { display: none; /* 실제 라디오 숨김 */ }
+.gender-btn input { display: none; }
 
 .gender-btn.active {
   background-color: #e6f7f4;
@@ -365,7 +284,6 @@ onMounted(() => {
 }
 .gender-btn:hover:not(.active) { background-color: #eee; }
 
-/* 에러 메시지 */
 .global-error {
   background-color: #fff5f5;
   color: #dc2626;
@@ -378,7 +296,6 @@ onMounted(() => {
 }
 .field-error { color: #dc2626; font-size: 0.8rem; margin-top: 5px; margin-left: 2px; }
 
-/* 버튼 영역 */
 .action-area { margin-top: 30px; }
 .submit-btn {
   width: 100%;
@@ -405,17 +322,46 @@ onMounted(() => {
 .login-link a { color: #2cb398; font-weight: bold; text-decoration: none; }
 .login-link a:hover { text-decoration: underline; }
 
-/* 로딩 스피너 */
 .spinner {
   width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s infinite linear;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* 애니메이션 */
 .fade-element { opacity: 0; transform: translateY(20px); transition: 0.8s ease; }
 .fade-element.visible { opacity: 1; transform: translateY(0); }
 
-/* 모바일 대응 */
+/* [추가됨] 카카오 로그인 버튼 스타일 */
+.kakao-btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 12px; /* 위 버튼과 간격 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #381e1f; /* 카카오 브라운 */
+  background-color: #fee500; /* 카카오 옐로우 */
+  border-radius: 12px; /* 기존 인풋들과 radius 통일 */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s, transform 0.1s;
+  box-sizing: border-box;
+}
+
+.kakao-btn:hover {
+  background-color: #fada0a;
+  transform: translateY(-2px); /* 호버 시 살짝 뜸 효과 */
+}
+
+.kakao-btn:active {
+  transform: scale(0.98);
+}
+
+.kakao-symbol {
+  font-size: 1.2rem;
+}
+
 @media (max-width: 480px) {
   .signup-container { padding: 20px 16px; }
   .signup-card { padding: 20px; }
