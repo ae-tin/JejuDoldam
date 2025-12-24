@@ -4,17 +4,12 @@ import copy
 import requests
 from django.conf import settings
 
-ACCOMPANY_LABEL_MAP = {
-    "나홀로 여행": 0,
-    "2인 여행(가족 외)": 1,
-    "2인 가족 여행": 1,
-    "3인 이상 여행(가족 외)": random.randint(2, 8),
-    "자녀 동반 여행": random.randint(2, 6),
-    "부모 동반 여행": random.randint(2, 8),
-    "3대 동반 여행(친척 포함)": random.randint(2, 16),
-}
+GENDER_LABEL = ["남", "여"]
+
+AGE_GRP_LABEL = [20, 30, 40, 50, 60]
 
 MARR_STTS_LABEL_MAP = {"미혼": 1, "기혼": 2, "사별": 3, "이혼": 4, "기타": 5}
+
 JOB_NM_LABEL_MAP = {
     "관리자": 1,
     "전문가 및 관련 종사자": 2,
@@ -44,6 +39,38 @@ INCOME_LABEL_MAP = {
     "월평균 800만원 ~ 900만원 미만": 10,
     "월평균 900만원 ~ 1,000만원 미만": 11,
     "월평균 1,000만원 이상": 12,
+}
+
+TRAVEL_NUM_LABEL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30]
+
+TRAVEL_STATUS_RESIDENCE_LABEL = [
+    "서울특별시",
+    "경기도",
+    "인천광역시",
+    "대전광역시",
+    "충청북도",
+    "충청남도",
+    "광주광역시",
+    "전라북도",
+    "전라남도",
+    "울산광역시",
+    "대구광역시",
+    "부산광역시",
+    "경상북도",
+    "경상남도",
+    "강원도",
+    "제주특별자치도",
+]
+
+
+ACCOMPANY_LABEL_MAP = {
+    "나홀로 여행": 0,
+    "2인 여행(가족 외)": 1,
+    "2인 가족 여행": 1,
+    "3인 이상 여행(가족 외)": random.randint(2, 8),
+    "자녀 동반 여행": random.randint(2, 6),
+    "부모 동반 여행": random.randint(2, 8),
+    "3대 동반 여행(친척 포함)": random.randint(2, 16),
 }
 
 TRAVEL_MOTIVE_1_LABEL_MAP = {
@@ -204,6 +231,42 @@ def preprocessing_input_data_no_add_info(user_data: dict, rec: str = "route") ->
 
         if rec == "place":
             user_info["TRAVEL_STATUS_DESTINATION"] = "제주"
+    return user_info
+
+
+def create_input_data_no_info(rec: str = "route") -> dict:
+    """
+    루트추천로직 외의 place 추천 input 처리기능
+    기본 사용자 정보 외 없는 데이터는 랜덤으로 처리
+    """
+
+    user_info = {}
+
+    # 필요한 정보들은 랜덤으로 처리
+    user_info["GENDER"] = random.choice(GENDER_LABEL)
+    user_info["AGE_GRP"] = random.choice(AGE_GRP_LABEL)
+    user_info["MARR_STTS"] = random.choice(list(MARR_STTS_LABEL_MAP.values()))
+    user_info["JOB_NM"] = random.choice(list(JOB_NM_LABEL_MAP.values()))
+    user_info["INCOME"] = random.choice(list(INCOME_LABEL_MAP.values()))
+    user_info["TRAVEL_NUM"] = random.choice(TRAVEL_NUM_LABEL)
+    user_info["TRAVEL_STATUS_RESIDENCE"] = random.choice(TRAVEL_STATUS_RESIDENCE_LABEL)
+
+    user_info["TRAVEL_MOTIVE_1"] = random.choice(
+        list(TRAVEL_MOTIVE_1_LABEL_MAP.values())
+    )
+    user_info["TRAVEL_STYL_1"] = random.choice(range(1, 8))
+    user_info["TRAVEL_STATUS_ACCOMPANY"] = random.choice(
+        list(ACCOMPANY_LABEL_MAP.keys())
+    )
+    user_info["TRAVEL_COMPANIONS_NUM"] = ACCOMPANY_LABEL_MAP[
+        user_info["TRAVEL_STATUS_ACCOMPANY"]
+    ]
+    user_info["MONTH"], user_info["SEASON"] = get_current_month_and_season()
+    user_info["HOW_LONG"] = random.choice(range(1, 9))
+
+    if rec == "place":
+        user_info["TRAVEL_STATUS_DESTINATION"] = "제주"
+
     return user_info
 
 
