@@ -101,7 +101,6 @@
         <section class="recommend-section fade-element delay-200">
           <div class="section-header">
             <h3>✈️ 지금 떠나기 좋은 여행</h3>
-            <span class="more-link" style="cursor: pointer;">더보기 ></span>
           </div>
 
           <div class="route-grid">
