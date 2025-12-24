@@ -6,11 +6,10 @@ import pickle
 import json
 from utils import trace_error, replace_nan
 
-BASE_DIR = Path().resolve().parent.parent
-save_path = BASE_DIR / "AI" / "place_recommend" / "model"
 
+BASE_DIR = Path(__file__).resolve().parent
+save_path = BASE_DIR / "model"
 
-# 1) LightFM 모델 로드
 with open(save_path / "lightfm_model.pkl", "rb") as f:
     model = pickle.load(f)
 

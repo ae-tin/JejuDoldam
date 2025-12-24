@@ -1,0 +1,4 @@
+,Unnamed: 0.1,Unnamed: 0,MOBILE_NUM_ID,X_COORD,Y_COORD,DT_MIN,TRAVEL_ID,TRAVEL_DAY,ADDRESS_FULL,ADDRESS_1DEPTH,ADDRESS_2DEPTH,ADDRESS_3DEPTH,ADDRESS_NAME,PLACE_URL,PLACE_CAT
+0,0,1,h002296_70368,126.4824886,33.4874089,2023-08-06 16:41:00,h_h002296,1,제주특별자치도 제주시 노형동 905,제주특별자치도,제주시,노형동,우림일식,http://place.map.kakao.com/8028947,음식점
+1,1,2,h002296_70368,126.5305443,33.5164226,2023-08-06 19:17:00,h_h002296,1,제주특별자치도 제주시 건입동 1430,제주특별자치도,제주시,건입동,산지천 전망대,http://place.map.kakao.com/1406565611,관광명소
+2,2,3,h002296_70368,126.5264439,33.5170549,2023-08-06 21:31:00,h_h002296,1,제주특별자치도 제주시 건입동 1445,제주특별자치도,제주시,건입동,맥도날드 탑동점,http://place.map.kakao.com/10347171,음식점

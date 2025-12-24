@@ -9,12 +9,6 @@ venv_lightfm_real
 .venv_lightfm_real
 venv_lightfm_real/
 
-## AI data ##
-data_local
-data_local/
-.data_local
-
-
 ### Django ###
 *.log
 *.pot
