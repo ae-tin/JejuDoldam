@@ -153,9 +153,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/client' // 미리 설정해둔 Axios 인스턴스 (API 호출용)
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-
+const authStore = useAuthStore()
 // --- [상태 변수] ---
 const loading = ref(false) // 로딩 중 여부
 const saving = ref(false)  // 저장 중 여부
@@ -237,9 +238,12 @@ const saveProfile = async () => {
   try {
     // PATCH 요청: 수정된 데이터만 업데이트
     await api.patch('/auth/me/', form.value)
-    
+    // 회원 정보 업데이트
+    await authStore.fetchUser()
     alert('성공적으로 저장되었습니다!')
+
     router.push('/mypage') // 마이페이지로 이동
+    
   } catch (e) {
     console.error(e)
     // 서버에서 보내주는 에러 메시지가 있다면 표시, 없으면 기본 메시지
