@@ -38,8 +38,16 @@
 
     <div v-else class="empty-state">
       <div class="icon">📭</div>
-      <p>아직 저장된 여행 루트가 없습니다.</p>
+      <p>아직 저장된 여행 루트가 없어요.<br>얼른 제주 여행 계획을 짜볼까요?!</p>
+      <button class="btn-action" @click="router.push('/routes/recommend')">
+        첫 여행 루트 만들러 가기
+      </button>
     </div>
+    <!-- </div>
+    <div v-else class="empty-state">
+      <div class="icon">📭</div>
+      <p>아직 저장된 여행 루트가 없습니다.</p>
+    </div> -->
 
   </div>
 </template>
@@ -169,6 +177,33 @@ onMounted(() => {
 .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #2cb398; border-radius: 50%; animation: spin 1s infinite linear; margin-right: 8px; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.empty-state { text-align: center; padding: 80px 0; color: #999; }
+.empty-state {
+  text-align: center;
+  padding: 80px 0;
+  color: #999;
+  background: #fdfdfd;
+  border-radius: 16px;
+  border: 1px dashed #eee;
+}
 .icon { font-size: 3rem; margin-bottom: 16px; }
+
+/* 글쓰기 버튼 (Empty State용) */
+.btn-write {
+  margin-top: 20px;
+  background-color: #2cb398;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-write:hover {
+  background-color: #249e85;
+}
+.btn-action {
+  margin-top: 20px; background-color: #333; color: white; border: none;
+  padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer;
+}
 </style>
