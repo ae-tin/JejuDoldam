@@ -68,6 +68,7 @@
 
           <div v-else-if="routes.length" class="route-grid">
             <div v-for="r in recentRoutes" :key="r.id" class="route-card" @click="detailRoutes(r.id)">
+              
               <div
                 class="route-card-img"
                 :class="{ 'recommend-gradient': !r.photo_url }"
@@ -110,6 +111,7 @@
               class="route-card"
               @click="selectRecommendedRoute(idx)"
             >
+            
               <div
                 class="route-card-img"
                 :class="{ 'recommend-gradient': !r.places?.[0]?.photo_url }"
@@ -133,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/client'
 import { useRouter } from 'vue-router'
@@ -187,6 +189,9 @@ const bgStyle = (url) => ({
 })
 
 onMounted(async () => {
+
+  await nextTick()
+  // 기존 observer 로직 유지
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
