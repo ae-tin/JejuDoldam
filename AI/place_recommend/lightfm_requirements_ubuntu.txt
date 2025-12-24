@@ -1,10 +1,18 @@
-# requirements/lightfm_linux.txt
-numpy>=1.23,<2.1
-scipy>=1.9,<1.13
-pandas>=1.5,<2.1
-scikit-learn>=1.2,<1.6
+# --- API ---
+fastapi==0.125.0
+uvicorn[standard]==0.38.0
+
+# --- Recommender ---
 lightfm==1.16
-joblib
-requests
-fastapi
-uvicorn
+
+# --- Data / ML ---
+numpy==1.21.6
+pandas==1.5.3
+scipy==1.7.3
+scikit-learn==1.6.1
+joblib==1.5.2
+
+# --- Utils ---
+python-dotenv==1.2.1
+requests==2.32.5
+
