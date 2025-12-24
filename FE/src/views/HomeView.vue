@@ -76,7 +76,6 @@
               >
                 <span class="route-tag">Saved</span>
               </div>
-
               
               <div class="route-card-body">
                 <h4 class="route-title">{{ r.title }}</h4>
@@ -96,6 +95,7 @@
             </button>
           </div>
         </section>
+
         <hr class="divider fade-element delay-200" />
 
         <section class="recommend-section fade-element delay-200">
@@ -106,21 +106,20 @@
 
           <div class="route-grid">
             <div 
-              v-for="r in recommendedRoutes" 
+              v-for="(r, idx) in recommendedRoutes" 
               :key="r.id" 
               class="route-card"
-              @click="detailRoutes(r.id)"
+              @click="selectRecommendedRoute(idx)"
             >
             
               <div
                 class="route-card-img"
-                :class="{ 'recommend-gradient': !r.places[0].photo_url }"
-                :style="r.places[0].photo_url ? bgStyle(r.places[0].photo_url) : {}"
+                :class="{ 'recommend-gradient': !r.places?.[0]?.photo_url }"
+                :style="r.places?.[0]?.photo_url ? bgStyle(r.places[0].photo_url) : {}"
               >
                 <span v-if="r.is_hot" class="route-tag hot">HOT 🔥</span>
                 <span v-else class="route-tag recommend">AI Pick</span>
               </div>
-
               
               <div class="route-card-body">
                 <h4 class="route-title">{{ r.title }}</h4>
@@ -128,8 +127,8 @@
               </div>
             </div>
           </div>
-
         </section>
+
       </div>
     </div>
   </div>
@@ -140,7 +139,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/client'
 import { useRouter } from 'vue-router'
-import NavVar from '@/components/NavVar.vue' // ✅ 컴포넌트 임포트
+import NavVar from '@/components/NavVar.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -150,23 +149,28 @@ const routes = ref([])
 const recentRoutes = computed(() => routes.value.slice(0, 3))
 const loading = ref(false)
 const error = ref('')
-
-
-// ... 기존 import 문들 아래에 ...
-
-// [추가] 추천 루트 데이터 
 const recommendedRoutes = ref([])
-
-// ... 기존 onMounted 등 ...
 
 let observer = null
 
-// 상세 페이지 이동
+// 상세 페이지 이동 (저장된 루트용)
 const detailRoutes = (routeId) => {
   router.push({ name: "route-detail", params: { routeId: routeId } })
 }
 
-// route recommend data api 호출
+// ✅ [수정됨] 추천 루트 클릭 시 전체 리스트와 선택된 인덱스를 넘깁니다.
+const selectRecommendedRoute = (index) => {
+  router.push({
+    path: '/routes/recommend/results',
+    state: { 
+      // 3개 루트 정보 전체를 넘겨야 탭이 정상적으로 나옵니다.
+      passedRoutes: JSON.parse(JSON.stringify(recommendedRoutes.value)), 
+      // 사용자가 클릭한 루트가 몇 번째인지 함께 전달
+      initialIndex: index 
+    }
+  })
+}
+
 async function fetchRecommendedRoutes() {
   try {
     const { data } = await api.get('/routes/recommend/')
@@ -184,7 +188,6 @@ const bgStyle = (url) => ({
   backgroundRepeat: "no-repeat",
 })
 
-
 onMounted(async () => {
 
   await nextTick()
@@ -199,7 +202,6 @@ onMounted(async () => {
 
   document.querySelectorAll('.fade-element').forEach(el => observer.observe(el))
 
-  // 로그인 사용자 데이터
   if (auth.isAuthenticated) {
     loading.value = true
     try {
@@ -208,13 +210,13 @@ onMounted(async () => {
         api.get('/routes/'),
       ])
 
+      me.value = meRes.data
       const routesData = routesRes.data
 
       for (const route of routesData) {
         const photoRes = await api.get('/routes/photo/', {
           params: { route_id: route.id }
         })
-
         route.photo_url = photoRes.data?.photo_url || null
       }
       routes.value = routesData
@@ -227,7 +229,6 @@ onMounted(async () => {
     }
   }
 
-  // ✅ 추천 루트 API 호출 (로그인 여부 무관)
   fetchRecommendedRoutes()
 })
 
@@ -237,22 +238,18 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 네브바 관련 스타일은 제거됨 (Navbar.vue로 이동) */
-
+/* 기존 스타일 유지 */
 .triple-container {
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", Roboto, sans-serif;
   color: #333;
-  padding-top: 60px; /* Navbar 높이만큼 여백 확보 */
+  padding-top: 60px;
   min-height: 100vh;
 }
-
-/* 애니메이션 */
 .fade-element { opacity: 0; transform: translateY(20px); transition: 0.8s ease; }
 .fade-element.visible { opacity: 1; transform: translateY(0); }
 .delay-100 { transition-delay: 0.1s; }
 .delay-200 { transition-delay: 0.2s; }
 
-/* 1. 비로그인 (랜딩) 스타일 */
 .hero-section {
   position: relative; height: 70vh;
   display: flex; align-items: center; justify-content: center; text-align: center;
@@ -278,7 +275,6 @@ onUnmounted(() => {
 .feature-item h3 { font-size: 1.2rem; margin-bottom: 8px; color: #333; }
 .feature-item p { color: #888; line-height: 1.5; font-size: 0.95rem; }
 
-/* 2. 로그인 (대시보드) 스타일 */
 .dashboard-view { background-color: #f9f9f9; min-height: calc(100vh - 60px); padding: 40px 20px; }
 .content-wrapper { max-width: 860px; margin: 0 auto; }
 
@@ -351,23 +347,8 @@ onUnmounted(() => {
   .hero-text h1 { font-size: 2rem; }
   .dashboard-header h2 { font-size: 1.5rem; }
 }
-/* 추천 루트 전용 그라데이션 (저장된 루트와 구분) */
-.recommend-gradient {
-  background: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%);
-}
-
-/* 태그 스타일 커스텀 */
-.route-tag.hot {
-  background-color: #ff5252; /* 빨간색 강조 */
-}
-
-.route-tag.recommend {
-  background-color: #764ba2; /* 보라색 AI 느낌 */
-}
-
-/* (선택) 카드 호버 시 약간 더 띄우기 */
-.route-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
+.recommend-gradient { background: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%); }
+.route-tag.hot { background-color: #ff5252; }
+.route-tag.recommend { background-color: #764ba2; }
+.route-card:hover { transform: translateY(-8px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
 </style>

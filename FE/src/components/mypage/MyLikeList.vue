@@ -92,17 +92,15 @@ const fetchLikedPosts = async () => {
   try {
     // 1. GET 요청 전송
     const { data } = await api.get('/posts/my/like/')
-    
-    // 2. 데이터 유효성 검사 및 정렬
-    // 배열이 맞는지 확인 후, ID 역순(최신순)으로 정렬하여 저장
-    if (Array.isArray(data)) {
-      likes.value = data.sort((a, b) => b.id - a.id)
-    } else {
-      likes.value = []
-    }
+    // ✅ 데이터 없음 = 정상 상태
+    likes.value = Array.isArray(data)
+      ? data.sort((a, b) => b.id - a.id)
+      : []
+
   } catch (e) {
-    console.error(e)
-    error.value = '목록을 불러오지 못했습니다. 아직 좋아요한 게시글이 없을 수 있습니다!'
+    console.error('좋아요 목록 로드 실패:', e)
+    // 진짜 실패만 에러
+    error.value = '좋아요한 게시글을 불러오지 못했습니다.'
   } finally {
     loading.value = false
   }
