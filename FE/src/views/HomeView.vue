@@ -68,15 +68,7 @@
 
           <div v-else-if="routes.length" class="route-grid">
             <div v-for="r in recentRoutes" :key="r.id" class="route-card" @click="detailRoutes(r.id)">
-              <!-- <div class="route-card-img"><span class="route-tag">Saved</span></div>
-              <div class="route-card-body">
-                <h4 class="route-title">{{ r.title }}</h4>
-                <p class="route-desc">{{ r.description || '설명 없는 여행' }}</p>
-                <div class="route-meta">
-                  <span>#{{ r.id }}</span>
-                  <span>{{ r.created_at.slice(0, 10) }}</span>
-                </div>
-              </div> -->
+              
               <div
                 class="route-card-img"
                 :class="{ 'recommend-gradient': !r.photo_url }"
@@ -119,10 +111,7 @@
               class="route-card"
               @click="detailRoutes(r.id)"
             >
-              <!-- <div class="route-card-img recommend-gradient">
-                <span v-if="r.is_hot" class="route-tag hot">HOT 🔥</span>
-                <span v-else class="route-tag recommend">AI Pick</span>
-              </div> -->
+            
               <div
                 class="route-card-img"
                 :class="{ 'recommend-gradient': !r.places[0].photo_url }"
@@ -136,9 +125,6 @@
               <div class="route-card-body">
                 <h4 class="route-title">{{ r.title }}</h4>
                 <p class="route-desc">{{ r.description }}</p>
-                <!-- <div class="route-meta">
-                  <span>조회수 1.2k</span> <span>{{ r.created_at }}</span>
-                </div> -->
               </div>
             </div>
           </div>
@@ -150,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/client'
 import { useRouter } from 'vue-router'
@@ -168,7 +154,7 @@ const error = ref('')
 
 // ... 기존 import 문들 아래에 ...
 
-// [추가] 추천 루트 데이터 (나중에 API 연결 시 빈 배열로 바꾸고 fetch 로직 넣으세요)
+// [추가] 추천 루트 데이터 
 const recommendedRoutes = ref([])
 
 // ... 기존 onMounted 등 ...
@@ -200,6 +186,8 @@ const bgStyle = (url) => ({
 
 
 onMounted(async () => {
+
+  await nextTick()
   // 기존 observer 로직 유지
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
