@@ -3,10 +3,17 @@
     <header class="post-header fade-element">
       <div class="header-top">
         <span class="category-badge">커뮤니티</span>
+        
         <div class="header-actions">
           <RouterLink to="/community" class="back-link">
             <span class="icon">←</span> 목록으로
           </RouterLink>
+
+          <div v-if="isMyPost" class="owner-btn-group">
+            <button @click="goEdit" class="text-btn edit">수정</button>
+            <span class="sep">|</span>
+            <button @click="deletePost" class="text-btn delete">삭제</button>
+          </div>
         </div>
       </div>
       
@@ -47,7 +54,6 @@
 
         <div class="map-container">
           <KakaoMap :places="dayPlaces" :key="selectedDayId" />
-          
           <div class="map-overlay-info">
             <span class="badge">총 {{ sortedDays.length }}일</span>
             <span class="badge" v-if="selectedDay">Day {{ selectedDay.day }}</span>
@@ -68,15 +74,11 @@
 
         <div class="day-detail-box">
           <div v-if="routeLoading" class="loading-text">루트 정보 로딩 중...</div>
-          
           <div v-else-if="routeDetail && selectedDay" class="day-content">
             <h3 class="day-title">
               Day {{ selectedDay.day }} 일정
-              <span class="place-count" v-if="dayPlaces.length">
-                ({{ dayPlaces.length }}곳)
-              </span>
+              <span class="place-count" v-if="dayPlaces.length">({{ dayPlaces.length }}곳)</span>
             </h3>
-            
             <ul v-if="dayPlaces.length" class="timeline-list">
               <li v-for="(p, idx) in dayPlaces" :key="p.id" class="timeline-item">
                 <div class="marker">{{ idx + 1 }}</div>
@@ -90,12 +92,7 @@
             <p v-else class="empty-text">이 날은 등록된 장소가 없습니다.</p>
           </div>
           <p v-else class="error-text">루트 정보를 불러올 수 없습니다.</p>
-
-          <button 
-            class="save-route-btn mobile-only" 
-            :disabled="addBusy"
-            @click="addRouteToMine"
-          >
+          <button class="save-route-btn mobile-only" :disabled="addBusy" @click="addRouteToMine">
             📥 내 여행으로 가져오기
           </button>
         </div>
@@ -103,14 +100,8 @@
 
       <section class="post-body-section">
         <div class="post-content">{{ post.content }}</div>
-        
         <div class="reaction-area">
-          <button 
-            class="like-btn" 
-            :class="{ active: post.is_liked }"
-            @click="toggleLike" 
-            :disabled="likeBusy"
-          >
+          <button class="like-btn" :class="{ active: post.is_liked }" @click="toggleLike" :disabled="likeBusy">
             <span class="heart-icon">{{ post.is_liked ? '❤️' : '🤍' }}</span>
             <span class="like-count">{{ post.like_count }}</span>
           </button>
@@ -119,7 +110,6 @@
 
       <section class="comments-section">
         <h3 class="section-title">댓글 <span class="count">{{ commentCount }}</span></h3>
-
         <ul v-if="post.writed_comments?.length" class="comment-list">
           <li v-for="c in post.writed_comments" :key="c.id" class="comment-item">
             <div class="comment-header">
@@ -129,20 +119,10 @@
             <p class="comment-content">{{ c.content }}</p>
           </li>
         </ul>
-        <div v-else class="no-comments">
-          첫 번째 댓글을 남겨보세요! 👇
-        </div>
-
+        <div v-else class="no-comments">첫 번째 댓글을 남겨보세요! 👇</div>
         <form class="comment-form" @submit.prevent="submitComment">
-          <textarea
-            v-model="commentInput"
-            rows="3"
-            placeholder="따뜻한 댓글을 남겨주세요 :)"
-            class="comment-input"
-          ></textarea>
-          <button type="submit" class="submit-btn" :disabled="commentBusy || !commentInput.trim()">
-            등록
-          </button>
+          <textarea v-model="commentInput" rows="3" placeholder="따뜻한 댓글을 남겨주세요 :)" class="comment-input"></textarea>
+          <button type="submit" class="submit-btn" :disabled="commentBusy || !commentInput.trim()">등록</button>
         </form>
       </section>
     </div>
@@ -158,7 +138,7 @@ import KakaoMap from '@/components/KakaoMap.vue'
 const route = useRoute()
 const router = useRouter()
 
-// 상태값
+// 상태값 (기존 유지)
 const post = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -169,8 +149,14 @@ const commentBusy = ref(false)
 const routeDetail = ref(null)
 const routeLoading = ref(false)
 const routeError = ref('')
-const selectedDayId = ref(null) // 현재 선택된 Day의 ID (탭 변경 시 바뀜)
+const selectedDayId = ref(null) 
 const addBusy = ref(false)
+
+// ✅ [수정됨] 백엔드에서 주는 is_writer 필드 활용
+const isMyPost = computed(() => {
+  // post 데이터가 있고, is_writer가 true일 때만 true 반환
+  return post.value?.is_writer === true
+})
 
 const commentCount = computed(() => post.value?.writed_comments?.length ?? 0)
 
@@ -180,27 +166,20 @@ const formatDate = (iso) => {
   return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}`
 }
 
-// Day 정렬 (1일차, 2일차...)
 const sortedDays = computed(() => {
   const days = routeDetail.value?.days || []
   return [...days].sort((a, b) => a.day - b.day)
 })
 
-// 현재 선택된 Day 객체 찾기
 const selectedDay = computed(() => {
   if (!routeDetail.value) return null
   return (routeDetail.value.days || []).find(d => d.id === selectedDayId.value) || null
 })
 
-// 현재 선택된 Day의 장소 목록 (지도와 리스트에 전달됨)
 const dayPlaces = computed(() => {
   const d = selectedDay.value
   if (!d) return []
   return [...(d.places || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-})
-
-const totalPlaces = computed(() => {
-  return (routeDetail.value?.days || []).reduce((sum, d) => sum + (d.places?.length || 0), 0)
 })
 
 const fetchPost = async () => {
@@ -208,9 +187,8 @@ const fetchPost = async () => {
   error.value = ''
   try {
     const { data } = await api.get(`/posts/${route.params.postId}/`)
-    post.value = data
+    post.value = data // is_writer 필드가 포함된 전체 데이터 저장
 
-    // 게시글에 연결된 루트가 있다면 상세 정보를 가져옴
     if (data.route?.id) {
       await fetchRouteDetail(data.route.id)
     } else {
@@ -230,8 +208,6 @@ const fetchRouteDetail = async (routeId) => {
   try {
     const { data } = await api.get(`/routes/post/${routeId}/`)
     routeDetail.value = data
-    
-    // 첫 번째 날짜를 기본 선택으로 설정
     const first = [...(data.days || [])].sort((a, b) => a.day - b.day)[0]
     selectedDayId.value = first?.id ?? null
   } catch (e) {
@@ -239,6 +215,25 @@ const fetchRouteDetail = async (routeId) => {
     routeError.value = '루트 정보를 불러오지 못했습니다.'
   } finally {
     routeLoading.value = false
+  }
+}
+
+// ✅ 게시글 수정 페이지로 이동
+const goEdit = () => {
+  router.push({ name: 'community-edit', params: { postId: post.value.id } })
+}
+
+// ✅ 게시글 삭제 API 요청
+const deletePost = async () => {
+  if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return
+
+  try {
+    await api.delete(`/posts/${post.value.id}/`)
+    alert('게시글이 삭제되었습니다.')
+    router.replace('/community') // 목록으로 이동
+  } catch (e) {
+    console.error('삭제 실패:', e)
+    alert('게시글 삭제 중 오류가 발생했습니다.')
   }
 }
 
@@ -317,7 +312,7 @@ watch(() => route.params.postId, fetchPost)
 </script>
 
 <style scoped>
-/* 전체 컨테이너 */
+/* 기존 스타일 유지 */
 .detail-container {
   max-width: 900px;
   margin: 0 auto;
@@ -326,17 +321,40 @@ watch(() => route.params.postId, fetchPost)
   color: #333;
 }
 
-/* 헤더 */
 .post-header { margin-bottom: 40px; text-align: center; }
 .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .category-badge { background-color: #e6f7f4; color: #2cb398; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
+
+.header-actions { display: flex; align-items: center; gap: 16px; }
+
 .back-link { color: #666; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 4px; }
 .back-link:hover { color: #2cb398; }
+
+/* ✅ 수정/삭제 버튼 그룹 스타일 */
+.owner-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.text-btn {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #888;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.text-btn.edit:hover { color: #3b82f6; background-color: #eff6ff; }
+.text-btn.delete:hover { color: #ef4444; background-color: #fef2f2; }
+.sep { color: #ddd; font-size: 0.8rem; }
+
 .post-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; line-height: 1.3; word-break: keep-all; }
 .post-meta { color: #888; font-size: 0.95rem; }
 .divider { margin: 0 8px; color: #ddd; }
 
-/* 루트 카드 */
+/* 루트 카드 스타일 및 나머지 스타일들은 기존 코드 유지 */
 .route-card-wrapper { background: #fff; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 50px; }
 .route-header { padding: 24px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
 .route-info .label { font-size: 0.8rem; color: #2cb398; font-weight: 700; margin-bottom: 8px; display: block; }
@@ -348,61 +366,15 @@ watch(() => route.params.postId, fetchPost)
 .save-route-btn:disabled { background-color: #a8d5cc; cursor: not-allowed; }
 .mobile-only { display: none; width: 100%; justify-content: center; margin-top: 20px; }
 
-/* 지도 */
-/* 지도 컨테이너: 높이 고정 및 z-index 설정 */
-.map-container {
-  height: 350px;       /* 지도 높이 고정 */
-  position: relative;  /* 자식 요소 기준점 */
-  background-color: #eee;
-  z-index: 0;          /* 지도는 가장 아래 레벨 */
-}
+.map-container { height: 350px; position: relative; background-color: #eee; z-index: 0; }
 .map-overlay-info { position: absolute; bottom: 16px; right: 16px; z-index: 2; display: flex; gap: 8px; }
 .badge { background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-/* Day 탭 */
-/* Day 탭 영역: 지도보다 위에 뜨도록 설정 */
-.day-tabs {
-  position: relative;  /* z-index 적용을 위해 필수 */
-  z-index: 10;         /* 지도(0)보다 높게 설정하여 무조건 위에 표시 */
-  
-  display: flex;
-  gap: 10px;
-  padding: 20px;
-  overflow-x: auto;    /* 가로 스크롤 허용 */
-  background-color: #fff; /* 배경색 흰색 (투명 방지) */
-  border-bottom: 1px solid #f0f0f0;
-  min-height: 60px;    /* 최소 높이 확보 */
-  align-items: center;
-}
-/* (참고) 탭 버튼 스타일은 기존 유지 */
-.tab-btn {
-  background: #f5f5f5;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  color: #666;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;      /* 탭이 찌그러지지 않도록 설정 */
-  transition: all 0.2s;
-}
-.tab-btn.active { 
-  background: #2cb398; 
-  color: white; 
-  box-shadow: 0 4px 10px rgba(44, 179, 152, 0.3);
-  transform: translateY(-2px);
-}
+.day-tabs { position: relative; z-index: 10; display: flex; gap: 10px; padding: 20px; overflow-x: auto; background-color: #fff; border-bottom: 1px solid #f0f0f0; min-height: 60px; align-items: center; }
+.tab-btn { background: #f5f5f5; border: none; padding: 8px 16px; border-radius: 20px; color: #666; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; }
+.tab-btn.active { background: #2cb398; color: white; box-shadow: 0 4px 10px rgba(44, 179, 152, 0.3); transform: translateY(-2px); }
 .tab-btn:hover { background-color: #e0e0e0; }
 
-.tab-btn.active {
-  background: #2cb398; /* 민트색 활성화 */
-  color: white;
-  box-shadow: 0 4px 10px rgba(44, 179, 152, 0.3);
-  transform: translateY(-2px); /* 살짝 떠오르는 효과 */
-}
-
-/* Day 상세 */
 .day-detail-box { padding: 24px; }
 .day-title { font-size: 1.2rem; margin-bottom: 20px; font-weight: 700; }
 .place-count { color: #888; font-size: 0.9rem; font-weight: normal; margin-left: 4px; }
@@ -416,7 +388,6 @@ watch(() => route.params.postId, fetchPost)
 .place-addr { color: #888; font-size: 0.9rem; margin-bottom: 8px; }
 .place-memo { background: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; color: #555; border: 1px dashed #ddd; }
 
-/* 본문 & 좋아요 */
 .post-body-section { margin-bottom: 60px; line-height: 1.8; font-size: 1.1rem; color: #333; }
 .post-content { white-space: pre-line; margin-bottom: 40px; }
 .reaction-area { text-align: center; }
@@ -425,7 +396,6 @@ watch(() => route.params.postId, fetchPost)
 .like-btn.active { border-color: #ff6b6b; background-color: #fff0f0; color: #ff6b6b; }
 .like-count { font-weight: bold; }
 
-/* 댓글 */
 .comments-section { border-top: 1px solid #eee; padding-top: 40px; }
 .section-title { font-size: 1.3rem; margin-bottom: 24px; }
 .section-title .count { color: #2cb398; margin-left: 4px; }
@@ -443,7 +413,6 @@ watch(() => route.params.postId, fetchPost)
 .submit-btn:hover { background: #111; }
 .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-/* 애니메이션 & 기타 */
 .fade-element { opacity: 0; transform: translateY(20px); transition: 0.8s ease; }
 .fade-element.visible { opacity: 1; transform: translateY(0); }
 .delay-100 { transition-delay: 0.1s; }

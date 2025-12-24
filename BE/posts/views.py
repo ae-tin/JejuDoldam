@@ -43,53 +43,6 @@ class PostListAPIView(APIView):
             post = serializer.save(user=request.user)
             return Response(PostCreateUpdateSerializer(post).data, status=status.HTTP_201_CREATED)
         
-    
-class PostCreateAPIView(APIView):
-    """
-    사용자의 요청을 받아 게시글 생성
-    """
-    
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        """
-        POST -> 게시글 생성
-        """
-        serializer = PostCreateUpdateSerializer(data=request.data, context={"request":request})
-
-        if serializer.is_valid(raise_exception=True):
-            post = serializer.save(user=request.user)
-            return Response(PostCreateUpdateSerializer(post).data, status=status.HTTP_201_CREATED)
-
-
-class PostUpdateDeleteAPIView(APIView):
-    """
-    사용자의 요청을 받아 게시글을 수정 및 삭제
-    """ 
-
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request, post_pk):
-        post = get_object_or_404(Post, pk=post_pk)
-
-        serializer = PostCreateUpdateSerializer(post, data=request.data, partial=True, context={"request":request})
-
-        if request.user != post.user:
-            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        if serializer.is_valid(raise_exception=True):
-            post = serializer.save(user=request.user)
-            return Response(PostCreateUpdateSerializer(post).data)
-        
-    def delete(self, request, post_pk):
-        post = get_object_or_404(Post, pk=post_pk)
-        
-        if request.user != post.user:
-            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-
-        
 
 class PostDetailAPIView(APIView):
     """
@@ -111,7 +64,12 @@ class PostDetailAPIView(APIView):
         사용자의 GET 요청을 받아 post_pk에 해당하는 post를 조회하는 함수
         """
         post = self.get_object(post_pk)
-        serializer = PostDetailSerializer(post, context={"request":request})
+        # 해당 사용자가 게시글을 작성한 사용자인지 확인
+        if post.user == request.user:
+            is_writer = True
+        else:
+            is_writer = False
+        serializer = PostDetailSerializer(post, context={"request":request, "is_writer":is_writer})
         return Response(serializer.data)
     
     

@@ -180,8 +180,17 @@ onMounted(() => {
 }
 
 .preview {
-  color: #666; font-size: 0.95rem; line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  /* 2줄까지만 보여주고 나머지는 ... 처리 */
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* 3줄 -> 2줄로 축소 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 높이 제한 추가 (안전장치) */
+  max-height: 3em; /* line-height(1.5) * 2줄 = 3em */
 }
 
 /* 카드 푸터 */
