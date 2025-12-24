@@ -32,8 +32,18 @@ class PostListAPIView(APIView):
 
         serializer = PostListSerailizer(posts, many=True, context={"request":request})
         return Response(serializer.data)
+    
+    def post(self, request):
+        """
+        사용자의 요청을 받아 게시글 생성
+        """
+        serializer = PostCreateUpdateSerializer(data=request.data, context={"request":request})
 
-
+        if serializer.is_valid(raise_exception=True):
+            post = serializer.save(user=request.user)
+            return Response(PostCreateUpdateSerializer(post).data, status=status.HTTP_201_CREATED)
+        
+    
 class PostCreateAPIView(APIView):
     """
     사용자의 요청을 받아 게시글 생성
@@ -103,6 +113,27 @@ class PostDetailAPIView(APIView):
         post = self.get_object(post_pk)
         serializer = PostDetailSerializer(post, context={"request":request})
         return Response(serializer.data)
+    
+    
+    def patch(self, request, post_pk):
+        post = get_object_or_404(Post, pk=post_pk)
+
+        serializer = PostCreateUpdateSerializer(post, data=request.data, partial=True, context={"request":request})
+
+        if request.user != post.user:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        if serializer.is_valid(raise_exception=True):
+            post = serializer.save(user=request.user)
+            return Response(PostCreateUpdateSerializer(post).data)
+        
+        
+    def delete(self, request, post_pk):
+        post = get_object_or_404(Post, pk=post_pk)
+        
+        if request.user != post.user:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class LikeAPIView(APIView):
