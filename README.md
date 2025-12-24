@@ -53,138 +53,166 @@ Frontend
 
 - Vue.js 3.5.26
 
-## 💿 프로젝트 폴더 구조
+## 📂 프로젝트 구조 (Project Structure)
+### 🤖 AI: Recommendation Engines (FastAPI)
+사용자의 성향을 분석하여 최적의 장소와 경로를 제안하는 독립 서버입니다.
 
----
-```swift
-JejuDoldam/
-│
-├── AI/ # AI 관련 서버 및 모델 디렉토리
-│ ├── place_recommend/ # 장소 추천 AI 서버 (FastAPI)
-│ │ ├── __pycache__/
-│ │ ├── dataset/ # 장소 추천 모델용 데이터셋
-│ │ │ ├── test/
-│ │ │ ├── test_data.csv
-│ │ │ ├── train_data.csv
-│ │ │ └── user_interactions.csv
-│ │ ├── models/ # 학습된 LightFM 모델 파일
-│ │ │ └── place_recommender.pkl
-│ │ ├── fastapi_place.py # 장소 추천 FastAPI 서버 실행 파일
-│ │ ├── place_recommender_train.py # 장소 추천 모델 학습 스크립트
-│ │ ├── requirements.txt # AI 서버 의존성 목록
-│ │ └── test.py # 모델 테스트 스크립트
-│ │
-│ └── route_recommend/ # 경로 추천 AI 서버 (FastAPI)
-│ ├── __pycache__/
-│ ├── data/ # 경로 추천 모델용 데이터셋
-│ │ ├── Jeju_Doldam_Data.csv
-│ │ ├── Jeju_Doldam_Log_Data.csv
-│ │ └── Jeju_Doldam_Place_Data.csv
-│ ├── models/ # 학습된 클러스터링 모델 파일
-│ │ ├── kmeans_model.pkl
-│ │ └── kproto_model.pkl
-│ ├── fastapi_route.py # 경로 추천 FastAPI 서버 실행 파일
-│ ├── requirements.txt # AI 서버 의존성 목록
-│ ├── route_recommender.py # 경로 추천 로직 구현 파일
-│ └── route_recommender_train.py # 경로 추천 모델 학습 스크립트
-│
-├── BE/ # 백엔드 서버 디렉토리 (Django)
-│ ├── accounts/ # 사용자 인증 및 관리 앱
-│ │ ├── __pycache__/
-│ │ ├── migrations/
-│ │ ├── admin.py
-│ │ ├── apps.py
-│ │ ├── models.py
-│ │ ├── serializers.py
-│ │ ├── tests.py
-│ │ ├── urls.py
-│ │ └── views.py
-│ ├── config/ # Django 프로젝트 설정 디렉토리
-│ │ ├── __pycache__/
-│ │ ├── __init__.py
-│ │ ├── asgi.py
-│ │ ├── settings.py
-│ │ ├── urls.py
-│ │ └── wsgi.py
-│ ├── posts/ # 게시글 커뮤니티 앱
-│ │ ├── __pycache__/
-│ │ ├── migrations/
-│ │ ├── admin.py
-│ │ ├── apps.py
-│ │ ├── models.py
-│ │ ├── serializers.py
-│ │ ├── tests.py
-│ │ ├── urls.py
-│ │ └── views.py
-│ ├── routes/ # 경로 생성 및 관리 앱 (AI 연동 포함)
-│ │ ├── __pycache__/
-│ │ ├── migrations/
-│ │ ├── admin.py
-│ │ ├── apps.py
-│ │ ├── models.py
-│ │ ├── serializers.py
-│ │ ├── tests.py
-│ │ ├── urls.py
-│ │ └── views.py
-│ ├── .env.example # 백엔드 환경변수 예시 파일
-│ ├── .gitignore
-│ ├── db.sqlite3 # 로컬 개발용 SQLite DB 파일
-│ ├── manage.py # Django 관리 커맨드 스크립트
-│ └── requirements.txt # 백엔드 의존성 목록
-│
-└── FE/ # 프론트엔드 디렉토리 (Vue.js)
- ├── node_modules/
- ├── public/
- │ └── favicon.ico
- ├── src/
- │ ├── api/ # Axios 인스턴스 및 API 호출 함수
- │ │ └── client.js
- │ ├── assets/ # 정적 리소스 (이미지, CSS 등)
- │ │ ├── base.css
- │ │ ├── logo.svg
- │ │ └── main.css
- │ ├── components/ # 재사용 가능한 Vue 컴포넌트
- │ │ ├── common/
- │ │ ├── posts/
- │ │ └── routes/
- │ ├── router/ # Vue Router 설정
- │ │ └── index.js
- │ ├── stores/ # Pinia 상태 관리 스토어
- │ │ ├── auth.js
- │ │ └── route.js
- │ ├── views/ # 페이지 단위 Vue 컴포넌트
- │ │ ├── HomeView.vue
- │ │ ├── LoginView.vue
- │ │ ├── MyPageView.vue
- │ │ ├── PostCreateView.vue
- │ │ ├── PostDetailView.vue
- │ │ ├── PostListView.vue
- │ │ ├── RouteConfirmView.vue
- │ │ ├── RouteCreateView.vue
- │ │ ├── RouteEditView.vue
- │ │ └── SignupView.vue
- │ ├── App.vue # 루트 Vue 컴포넌트
- │ └── main.js # Vue 앱 진입점
- ├── .env.example # 프론트엔드 환경변수 예시 파일
- ├── .gitignore
- ├── index.html # 프론트엔드 진입 HTML 파일
- ├── jsconfig.json
- ├── package-lock.json
- ├── package.json # 프론트엔드 의존성 목록 및 스크립트
- ├── README.md
- └── vite.config.js # Vite 빌드 도구 설정
+place_recommend/: 사용자의 인구통계학적 특성 및 여행 스타일을 바탕으로 한 장소 추천 서버입니다.
+
+route_recommend/: 유사 성향 사용자의 이동 데이터를 분석하여 여행 경로를 생성하는 서버입니다.
+
+### ⚙️ BE: Backend (Django REST Framework)
+데이터 관리 및 AI 서버와의 통신을 담당하는 핵심 API 서버입니다.
+
+accounts/: JWT 기반의 회원 인증 및 프로필 정보를 관리합니다.
+
+routes/: 추천 요청 처리, 경로 편집 및 Route > Day > Place 구조의 데이터를 일괄 저장합니다.
+
+posts/: 사용자 간 여행 루트를 공유하고 소통할 수 있는 커뮤니티 기능을 담당합니다.
+
+### 💻 FE: Frontend (Vue.js 3)
+사용자에게 추천 프로세스와 경로 편집 기능을 제공하는 인터페이스입니다.
+
+src/api/: Axios 인터셉터를 통해 JWT 토큰 만료 시 자동으로 Refresh를 요청하는 클라이언트를 포함합니다.
+
+src/stores/: Pinia를 사용하여 로그인 상태 및 현재 편집 중인 여행 경로 데이터를 관리합니다.
+### 🔌핵심 API 명세
+1. 로그인 (JWT 발급)
+사용자 인증을 통해 토큰을 발급받습니다.
+
+`Endpoint: POST /api/v1/auth/jwt/login/`
+
+Request Body Example:
+
+```JSON
+
+{
+  "username": "user123",
+  "password": "password123"
+}
 ```
+Response Example:
+```JSON
+
+{
+  "refresh": "eyJ0eXAi...",
+  "access": "eyJ0eXAi..."
+}
+```
+2. 여행 경로 추천 (AI 연동)
+사용자 조건에 맞는 3개의 추천 루트 리스트를 반환합니다.
+
+`Endpoint: POST /api/v1/routes/recommend/`
+
+Request Body Example:
+
+```JSON
+
+{
+  "HOW_LONG": 3,
+  "SEASON": "summer",
+  "TRAVEL_STYL_1": 2,
+  "TRAVEL_MOTIVE_1": 7
+}
+```
+Response Example:
+```JSON
+
+[
+  {
+    "id": 1,
+    "title": "동부 힐링 루트 (3일)",
+    "description": "성산일출봉 중심 힐링 코스",
+    "days": 3,
+    "places": [
+      { "day": 1, "order": 1, "name": "성산일출봉", "photo_url": "..." },
+      { "day": 1, "order": 2, "name": "섭지코지", "photo_url": "..." }
+    ]
+  }
+]
+```
+3. 추천 결과 확정 (DB 저장)
+추천받거나 편집한 경로를 데이터베이스에 영구 저장합니다.
+
+`Endpoint: POST /api/v1/routes/confirm/`
+
+Request Body Example:
+
+```JSON
+
+{
+  "title": "나의 제주 힐링 여행",
+  "description": "조용한 카페 위주의 여행",
+  "days": [
+    {
+      "day": 1,
+      "places": [
+        { "order": 1, "name": "함덕해수욕장", "address": "...", "latitude": 33.54, "longitude": 126.66 }
+      ]
+    }
+  ]
+}
+```
+`Response Status: 201 Created (저장된 Route 상세 객체 반환)`
+
+4. 카카오 로그인 (Social Login)
+카카오 OAuth 2.0을 통해 인증을 진행하고, 서비스 전용 JWT 토큰을 발급받습니다.
+
+`Endpoint: POST /api/v1/auth/kakao/login/`
+
+Request Body Example:
+
+```JSON
+
+{
+  "code": "KAKAO_AUTHORIZATION_CODE_FROM_CALLBACK"
+}
+```
+Response Example:
+
+```JSON
+
+{
+  "access": "eyJ0eXAi...",
+  "refresh": "eyJ0eXAi...",
+  "is_setting": true
+}
+```
+`is_setting`: 해당 유저의 추가 정보(성별, 연령대 등 AI 추천에 필요한 필수 데이터)가 이미 등록되어 있는지 여부를 나타냅니다. false일 경우 프로필 설정 페이지로 리다이렉트가 필요합니다.
 
 ## 🖨 ERD
 
 ---
-
-깃허브 웹에서 수정
+<img width="2752" height="1536" alt="Gemini_Generated_Image_9zrzli9zrzli9zrz" src="https://github.com/user-attachments/assets/69fbeaaa-921f-4370-972e-4a221464a775" />
 
 ### 🖱 코드 컨벤션
 ---
 https://github.com/ae-tin/JejuDoldam/wiki/Code-Convention
 
 ## 🔈 기능 시연 상세
+- 로그인 하지 않은 초기 랜딩 페이지
+<img width="2559" height="1274" alt="image" src="https://github.com/user-attachments/assets/b2055de9-4f32-4335-bc29-a789c971370e" />
+
+- 로그인 후 메인페이지
+<img width="2559" height="1282" alt="image" src="https://github.com/user-attachments/assets/a87ce54a-85ce-4e97-b912-a435ba94d344" />
+
+-> 대중적으로 만족도가 높을만한 경로를 메인페이지에 접속 할 때마다 3개씩 랜덤으로 추천
+- 여행 스타일 입력 페이지
+<img width="2557" height="1288" alt="image" src="https://github.com/user-attachments/assets/42f20941-0b80-4f4e-9af6-288ecdc627c1" />
+
+- 여행 경로 추천 페이지
+<img width="2559" height="1276" alt="image" src="https://github.com/user-attachments/assets/1facc43c-1dfb-47d3-a170-45a4ae3efdd2" />
+
+- 저장한 경로 상세조회 페이지
+차후 수정
+- 커뮤니티(게시글 목록 조회)
+<img width="2559" height="1277" alt="image" src="https://github.com/user-attachments/assets/28bcd03c-9776-46b2-b1c3-2f3805f28db9" />
+
+- 커뮤니티(게시글 상세 조회)
+<img width="2559" height="1283" alt="image" src="https://github.com/user-attachments/assets/6995e51e-d95f-4095-8fab-7875e95a287e" />
+
+
+
+
 
 ---
