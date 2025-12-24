@@ -1,0 +1,8 @@
+# requirements/cluster_linux.txt
+numpy>=1.23,<2.1
+pandas>=1.5,<2.1
+scipy>=1.9,<1.13
+scikit-learn>=1.2,<1.6
+kmodes==0.12.2
+joblib
+tqdm
