@@ -321,7 +321,22 @@ onUnmounted(() => {
 }
 .route-card-body { padding: 16px; }
 .route-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.route-desc { font-size: 0.9rem; color: #666; margin-bottom: 12px; height: 1.2em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ✅ [수정됨] 설명 텍스트가 잘리지 않고 2줄 말줄임표(...)로 나오도록 개선 */
+.route-desc { 
+  font-size: 0.9rem; 
+  color: #666; 
+  margin-bottom: 12px; 
+  
+  /* 멀티 라인 말줄임 처리 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;      /* 최대 2줄까지만 표시 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;        /* 기존 nowrap 제거 */
+  line-height: 1.4;           /* 줄 간격 확보 */
+  height: 2.8em;              /* 2줄 높이만큼 고정 (레이아웃 깨짐 방지) */
+}
 .route-meta { font-size: 0.8rem; color: #999; display: flex; gap: 8px; }
 
 .empty-state { text-align: center; padding: 40px; background: white; border-radius: 12px; color: #888; border: 1px dashed #ddd; }
