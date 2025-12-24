@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SignupSerializer, LoginSirializer, MeSerializer
+from .serializers import SignupSerializer, LoginSirializer, MeSerializer, UserInfoUpdateSerializer
 from django.contrib.auth import login
 from rest_framework.permissions import IsAuthenticated
 
@@ -64,6 +64,7 @@ class LoginAPIView(APIView):
 class MeAPIView(APIView):
     """
     GET /auth/me/ -> JWT로 로그인된 사용자의 정보를 반환
+    PATCH /auth/info/  -> 회원정보 변경 요청
     """
 
     permission_classes = [IsAuthenticated]
@@ -71,3 +72,22 @@ class MeAPIView(APIView):
     def get(self, request):
         serializer = MeSerializer(request.user)
         return Response(serializer.data)
+    
+    def patch(self, request):
+        """
+        현재 로그인한 사용자의 회원정보를 수정함
+        """
+        user = request.user
+        serializer = UserInfoUpdateSerializer(user, request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+            serializer = MeSerializer(user)
+            return Response(serializer.data)
+    
+        
+        
+        
+        
+        
+        
+        

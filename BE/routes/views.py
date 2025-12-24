@@ -559,6 +559,7 @@ class RouteConfirmAPIView(APIView):
             route_day = RouteDay.objects.create(route=route, day=day_data["day"])
             # 생성된 일차 정보의 장소를 순회하며 일차와 장소를 매핑
             for place_data in day_data["places"]:
+                print(place_data.get("photo_url"))
                 RoutePlace.objects.create(
                     route_day=route_day,
                     order=place_data["order"],

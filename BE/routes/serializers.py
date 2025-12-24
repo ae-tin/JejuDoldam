@@ -174,3 +174,4 @@ class RouteConfirmInputSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     description = serializers.CharField(required=False, allow_blank=True)
     days = RouteDayInputSerializer(many=True)
+

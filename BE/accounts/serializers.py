@@ -112,5 +112,31 @@ class MeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ["id", "username", ]
-        read_only_fields = fields
+        fields = ["id", "username", "birth_date", "marriage_status", "job", "income", "travel_num", "residence", "gender",]
+        read_only_fields = ["id", "username",]
+        
+        
+class UserInfoUpdateSerializer(serializers.ModelSerializer):
+    """
+    사용자의 유저 정보를 변경하는 serializer
+    """
+    class Meta:
+        model = User
+        fields = ["birth_date", "marriage_status", "job", "income", "travel_num", "residence",]
+    
+    def validate_birth_date(self, value):
+        """
+        # 사용자가 입력한 생년월일을 검증함
+        """
+        if value > date.today():
+            raise serializers.ValidationError("생년월일은 미래일 수 없습니다.")
+        return value
+    
+    def validate_travel_num(self, value):
+        """
+        사용자가 입력한 여행 빈도를 검증함
+        """
+        allowed = {1,2,3,4,5,6,7,8,9,10,11,12,15,20,25,30}
+        if value not in allowed:
+            raise serializers.ValidationError("연간 여행 빈도 값이 허용 범위가 아닙니다.")
+        return value
