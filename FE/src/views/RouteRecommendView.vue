@@ -368,6 +368,8 @@ function mapRouteToConfirmPayload(routeObj) {
         address: p.address ?? '',
         latitude: p.latitude ?? null,
         longitude: p.longitude ?? null,
+        photo_url: p.photo_url ?? '',
+        place_url: p.place_url ?? '',
         memo: p.memo ?? '',
       })),
     })),
