@@ -46,7 +46,7 @@
 
         <hr class="divider" />
 
-        <section class="form-section">
+        <!-- <section class="form-section">
           <h3 class="section-title">개인 정보</h3>
 
           <div class="row-group">
@@ -137,7 +137,7 @@
               <p v-if="fieldErrors.travel_num" class="field-error">{{ fieldErrors.travel_num }}</p>
             </div>
           </div>
-        </section>
+        </section> -->
 
         <div class="action-area">
           <button class="submit-btn" type="submit" :disabled="loading">
