@@ -12,6 +12,6 @@ urlpatterns = [
     # (access 만료 시 refresh로 재발급)
     path("jwt/refresh/", TokenRefreshView.as_view()),
 
-    # 회원 정보 조회
+    # 회원 정보 조회, 수정
     path("me/", views.MeAPIView.as_view()),
 ]

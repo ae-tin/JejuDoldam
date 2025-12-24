@@ -30,8 +30,8 @@
             </div>
             
             <div class="btn-group">
-              <button class="btn-edit" disabled>프로필 편집</button>
-              <button class="btn-settings" @click="changeTab('settings')">⚙️</button>
+              <button class="btn-edit" @click="changeTab('settings')">프로필 편집</button>
+              <!-- <button class="btn-settings" @click="changeTab('settings')">⚙️</button> -->
             </div>
           </div>
         </div>
@@ -76,6 +76,7 @@ import api from '@/api/client'
 import MyPageRoutes from '@/components/mypage/MyPageRoutes.vue'
 import MyPagePosts from '@/components/mypage/MyPagePosts.vue'
 import MyLikeList from '@/components/mypage/MyLikeList.vue' // (파일명을 MyLikeList로 변경했다면 이걸로 쓰세요)
+import MyPageSettings from '@/components/mypage/MyPageSettings.vue'
 
 // --- [라우터 객체 생성] ---
 const route = useRoute()    // 현재 URL 정보 (?tab=likes 같은 쿼리 파라미터 확인용)
@@ -94,7 +95,7 @@ const tabs = [
   { key: 'likes', label: '좋아요', comp: MyLikeList }, // ✅ 여기에 좋아요 컴포넌트 연결
   { key: 'followers', label: '팔로워', comp: null },   // 아직 기능 구현 전
   { key: 'following', label: '팔로잉', comp: null },
-  { key: 'settings', label: '설정', comp: null },
+  { key: 'settings', label: '프로필', comp: MyPageSettings },
 ]
 
 // --- [Computed: 계산된 속성] ---
