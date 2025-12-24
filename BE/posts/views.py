@@ -40,17 +40,9 @@ class PostListAPIView(APIView):
         serializer = PostListSerailizer(posts, many=True, context={"request": request})
         return Response(serializer.data)
 
-
-class PostCreateAPIView(APIView):
-    """
-    사용자의 요청을 받아 게시글 생성
-    """
-
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
         """
-        POST -> 게시글 생성
+        사용자의 요청을 받아 게시글 생성
         """
         serializer = PostCreateUpdateSerializer(
             data=request.data, context={"request": request}
@@ -63,12 +55,35 @@ class PostCreateAPIView(APIView):
             )
 
 
-class PostUpdateDeleteAPIView(APIView):
+class PostDetailAPIView(APIView):
     """
-    사용자의 요청을 받아 게시글을 수정 및 삭제
+    GET    /posts/<id>/   → 게시글 상세 조회
+    PUT    /posts/<id>/   → 게시글 전체 수정
+    PATCH  /posts/<id>/   → 게시글 부분 수정
+    DELETE /posts/<id>/   → 게시글 삭제
     """
 
+    # 로그인한 사용자만 상호작용 가능
     permission_classes = [IsAuthenticated]
+
+    # 요청된 pk에 맞는 post 객체를 반환
+    def get_object(self, post_pk):
+        return get_object_or_404(Post, pk=post_pk)
+
+    def get(self, request, post_pk):
+        """
+        사용자의 GET 요청을 받아 post_pk에 해당하는 post를 조회하는 함수
+        """
+        post = self.get_object(post_pk)
+        # 해당 사용자가 게시글을 작성한 사용자인지 확인
+        if post.user == request.user:
+            is_writer = True
+        else:
+            is_writer = False
+        serializer = PostDetailSerializer(
+            post, context={"request": request, "is_writer": is_writer}
+        )
+        return Response(serializer.data)
 
     def patch(self, request, post_pk):
         post = get_object_or_404(Post, pk=post_pk)
@@ -94,30 +109,6 @@ class PostUpdateDeleteAPIView(APIView):
             )
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class PostDetailAPIView(APIView):
-    """
-    GET    /posts/<id>/   → 게시글 상세 조회
-    PUT    /posts/<id>/   → 게시글 전체 수정
-    PATCH  /posts/<id>/   → 게시글 부분 수정
-    DELETE /posts/<id>/   → 게시글 삭제
-    """
-
-    # 로그인한 사용자만 상호작용 가능
-    permission_classes = [IsAuthenticated]
-
-    # 요청된 pk에 맞는 post 객체를 반환
-    def get_object(self, post_pk):
-        return get_object_or_404(Post, pk=post_pk)
-
-    def get(self, request, post_pk):
-        """
-        사용자의 GET 요청을 받아 post_pk에 해당하는 post를 조회하는 함수
-        """
-        post = self.get_object(post_pk)
-        serializer = PostDetailSerializer(post, context={"request": request})
-        return Response(serializer.data)
 
 
 class LikeAPIView(APIView):

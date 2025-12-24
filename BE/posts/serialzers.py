@@ -71,12 +71,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     # 유저 정보 같이 넘겨줌
     user = MeSerializer(read_only=True)
+    # 해당 게시글을 작성한 사용자인지 확인
+    is_writer = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
         fields = [
             "id", "title", "content", "created_at", "updated_at",
-            "like_count", "is_liked", "writed_comments", "route", "user",
+            "like_count", "is_liked", "writed_comments", "route", "user", "is_writer",
         ]
 
     def get_like_count(self, obj):
@@ -88,6 +90,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
         if not request or request.user.is_anonymous:
             return False
         return obj.like_users.filter(pk=request.user.pk).exists()
+    
+    def get_is_writer(self, obj):
+        is_writer = self.context.get("is_writer")
+        
+        if is_writer:
+            return True
+        else:
+            return False
         
 
 class PostCreateUpdateSerializer(serializers.ModelSerializer):

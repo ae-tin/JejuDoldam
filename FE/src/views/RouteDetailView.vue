@@ -20,7 +20,12 @@
         <div class="panel-header">
           <div class="header-top">
             <span class="badge">MY ROUTE</span>
+            
+            <button class="btn-delete-route" @click="deleteRoute">
+              🗑️ 루트 삭제
+            </button>
           </div>
+          
           <div class="route-meta-form">
             <div class="input-group">
               <label>여행 제목</label>
@@ -209,8 +214,7 @@ const selectedDay = computed(() => {
 const dayPlaces = computed(() => {
   const d = selectedDay.value
   if (!d) return []
-  const places = d.places || []
-  return [...places].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  return [...(d.places || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 })
 
 onMounted(() => {
@@ -218,11 +222,6 @@ onMounted(() => {
 })
 
 function togglePlacePhoto(place) {
-  // ✅ [디버깅] 클릭한 장소의 데이터 확인
-  // F12 -> Console 탭에서 photo_url 값이 있는지 확인하세요.
-  console.log('클릭한 장소 데이터:', place)
-  console.log('사진 URL:', place.photo_url)
-
   selectedPlaceId.value = selectedPlaceId.value === place.id ? null : place.id
 }
 
@@ -264,6 +263,21 @@ async function saveRouteMeta() {
     alert(parseDRFError(e) || '저장에 실패했습니다.')
   } finally {
     metaSaving.value = false
+  }
+}
+
+// ✅ [추가됨] 루트 삭제 기능
+async function deleteRoute() {
+  if (!route.value) return
+  if (!confirm('정말 이 여행 루트를 삭제하시겠습니까?\n삭제된 루트는 복구할 수 없습니다.')) return
+
+  try {
+    await api.delete(`/routes/${route.value.id}/`)
+    alert('루트가 삭제되었습니다.')
+    router.replace({ path: '/mypage', query: { tab: 'routes' } })
+  } catch (e) {
+    console.error(e)
+    alert(parseDRFError(e) || '루트 삭제에 실패했습니다.')
   }
 }
 
@@ -311,7 +325,6 @@ async function addPlaceToSelectedDay(place) {
     const orders = (d.places || []).map(p => Number(p.order || 0))
     const nextOrder = (orders.length ? Math.max(...orders) : 0) + 1
     
-    // ✅ photo_url이 제대로 전달되는지 확인
     const payload = {
       order: nextOrder,
       name: place.name,
@@ -319,7 +332,7 @@ async function addPlaceToSelectedDay(place) {
       latitude: place.latitude ?? null,
       longitude: place.longitude ?? null,
       place_url: place.place_url ?? '',
-      photo_url: place.photo_url ?? '', // 여기가 핵심
+      photo_url: place.photo_url ?? '', 
       memo: '',
     }
     const { data } = await api.post(`/routes/days/${d.id}/places/`, payload)
@@ -431,6 +444,24 @@ function parseDRFError(err) {
 .panel-header { padding: 24px; background: #fff; border-bottom: 1px solid #f0f0f0; }
 .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .badge { background-color: #e6f7f4; color: #2cb398; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
+
+/* ✅ [추가됨] 루트 삭제 버튼 스타일 */
+.btn-delete-route {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.btn-delete-route:hover {
+  color: #e74c3c; /* 빨간색 호버 */
+  background-color: #fff0f0;
+}
+
 .route-meta-form { display: flex; flex-direction: column; gap: 12px; }
 .input-group label { font-size: 0.8rem; color: #888; font-weight: 600; margin-bottom: 4px; display: block; }
 .input-title, .input-desc {
@@ -482,7 +513,7 @@ function parseDRFError(err) {
 .btn-group button:last-child { border-right: none; }
 .del-btn { background: none; border: none; color: #bbb; font-size: 1.2rem; cursor: pointer; }
 
-/* ✅ [수정됨] 확장 컨텐츠 (메모+사진) 스타일 */
+/* 확장 컨텐츠 (메모+사진) 스타일 */
 .expand-content {
   margin-top: 16px; border-top: 1px dashed #eee; padding-top: 16px;
   animation: slideDown 0.3s ease;

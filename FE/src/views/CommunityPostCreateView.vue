@@ -103,7 +103,7 @@ const handleSubmit = async () => {
       content: form.value.content,
       route: form.value.route,
     }
-    await api.post('/posts/create/', payload)
+    await api.post('/posts/', payload)
     // alert('게시글이 등록되었습니다.') // UX상 부드러운 이동을 위해 alert 제거 가능
     router.push({ name: 'community-list' })
   } catch (e) {

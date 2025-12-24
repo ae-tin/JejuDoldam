@@ -11,6 +11,7 @@ import RouteListView from '@/views/RouteListView.vue'
 import CommunityPostListView from '@/views/CommunityPostListView.vue'
 import CommunityPostCreateView from '@/views/CommunityPostCreateView.vue'
 import CommunityPostDetailView from '@/views/CommunityPostDetailView.vue'
+import CommunityPostUpdateView from '@/views/CommunityPostUpdateView.vue'
 
 
 const router = createRouter({
@@ -78,6 +79,12 @@ const router = createRouter({
       name: 'community-detail', 
       component: CommunityPostDetailView, 
       meta: { requiresAuth: true } 
+    },
+    {
+      path: '/community/:postId/edit',
+      name: 'community-edit',
+      component: CommunityPostUpdateView,
+      meta: { requiresAuth: true }
     },
   ],
 })
