@@ -329,13 +329,13 @@ class RouteRecommendAPIView(APIView):
             **data,
         }
 
-        # ai 장소 추천 생성 전처리 및 호출 -> 장소 추천 안넣을거면 지워도 됨
-        place_ai_input_random_data = preprocessing_input_data_no_add_info(
-            user_info, rec="place"
-        )
-        place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
-        places_random_data = self.create_ai_places(place_ai_input_random_data)
-        places_full_data = self.create_ai_places(place_ai_input_full_data)
+        # # ai 장소 추천 생성 전처리 및 호출 -> 장소 추천 안넣을거면 지워도 됨
+        # place_ai_input_random_data = preprocessing_input_data_no_add_info(
+        #     user_info, rec="place"
+        # )
+        # place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
+        # places_random_data = self.create_ai_places(place_ai_input_random_data)
+        # places_full_data = self.create_ai_places(place_ai_input_full_data)
 
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
         route_ai_input_data = preprocessing_input_data(ai_input_data)
@@ -349,12 +349,6 @@ class RouteRecommendAPIView(APIView):
         return Response(routes)
 
     def get(self, request):
-        # ai 장소 추천 생성 전처리 및 호출
-        place_ai_input_random_data = create_input_data_no_info(rec="place")
-        # # place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
-        places = self.create_ai_places(place_ai_input_random_data)
-        # places_full_data = self.create_ai_places(place_ai_input_full_data)
-
         # ai 추천 경로 생성 함수 호출 -> 프론트가 기대하는 형태로 변환
         route_ai_input_random_data = create_input_data_no_info(rec="route")
         routes = self.create_ai_routes(route_ai_input_random_data)
@@ -365,30 +359,7 @@ class RouteRecommendAPIView(APIView):
             )
 
         return Response(routes)
-
-    def create_ai_places(self, ai_input_data):
-        """
-        AI 모델을 호출하여 추천 경로를 생성하는 함수
-        """
-        # pprint(ai_input_data)
-
-        AI_SERVER_URL = "http://127.0.0.1:8002/place_rec_ai"
-        ai_response = requests.post(AI_SERVER_URL, json=ai_input_data, timeout=5)
-
-        ai_result = ai_response.json()
-        places = ai_result["result"]
-        ####################################
-        # output = {
-        #    result: [
-        #        route1_dataframe,
-        #        route2_dataframe,
-        #        ,,,]
-        #    }
-        ####################################
-        # print("*" * 30, "성공", "*" * 30)
-        # pprint(places)  # 여러개 추천 중 첫번째만 출력(성공 확인용)
-        # print("*" * 30, "성공", "*" * 30)
-        return places
+    
 
     def create_ai_routes(self, ai_input_data):
         """
@@ -470,6 +441,112 @@ class RouteRecommendAPIView(APIView):
             recommend_routes.append(recommend_route)
         # print(recommend_routes)
         return recommend_routes
+    
+class PlaceRecommendAPIView(APIView):
+    """
+    POST /routes/recommend/places/
+    -> 여행 조건을 받아서 추천 장소 리스트를 반환
+
+    example_user = {
+        "GENDER": "남",
+        "AGE_GRP": 30,
+        "MARR_STTS": 1,
+        "JOB_NM": 3,
+        "INCOME": 4,
+        "TRAVEL_STYL_1": 2,
+        "TRAVEL_STATUS_RESIDENCE": "서울특별자치도",
+        "TRAVEL_STATUS_ACCOMPANY": "2인 여행(가족 외)",
+        "TRAVEL_MOTIVE_1": 7,
+        "TRAVEL_NUM": 3,
+        "TRAVEL_COMPANIONS_NUM": 1,
+        "MONTH": 8,
+        "SEASON": "summer",
+        "HOW_LONG": 3,
+    }
+    """
+
+    # 로그인한 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # 입력값 검증
+        serializer = RouteRecommendInputSerializer2(data=request.data)
+        # 유효성 검사
+        serializer.is_valid(raise_exception=True)
+        # 유효성 검사를 통과한 깨끗한 데이터를 변수에 할당
+        data = serializer.validated_data
+
+        # 유저 DB 정보 로드
+        user_data = get_object_or_404(User, username=request.user)
+        user_info = {
+            "GENDER": user_data.gender,  # pass
+            "AGE_GRP": user_data.birth_date,  # pass
+            "MARR_STTS": user_data.marriage_status,  # pass
+            "JOB_NM": user_data.job,  # pass
+            "INCOME": user_data.income,  # pass
+            "TRAVEL_NUM": user_data.travel_num,  # pass
+            "TRAVEL_STATUS_RESIDENCE": user_data.residence,  # pass
+        }
+
+        # ai_input 형식 맞추기
+        ai_input_data = {
+            **user_info,
+            **data,
+        }
+
+        # ai 장소 추천 생성 전처리 및 호출 -> 장소 추천 안넣을거면 지워도 됨
+        place_ai_input_random_data = preprocessing_input_data_no_add_info(
+            user_info, rec="place"
+        )
+        place_ai_input_full_data = preprocessing_input_data(ai_input_data, rec="place")
+        places_random_data = self.create_ai_places(place_ai_input_random_data)
+        places_full_data = self.create_ai_places(place_ai_input_full_data)
+
+        if not places_random_data:
+            return Response(
+                {"detail": "경로 추천이 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(places_random_data)
+
+    def get(self, request):
+        print('here')
+        # ai 장소 추천 생성 전처리 및 호출
+        place_ai_input_random_data = create_input_data_no_info(rec="place")
+        places = self.create_ai_places(place_ai_input_random_data)
+        if not places:
+            return Response(
+                {"detail": "장소 추천이 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(places)
+
+    def create_ai_places(self, ai_input_data):
+        """
+        AI 모델을 호출하여 추천 경로를 생성하는 함수
+        """
+        # pprint(ai_input_data)
+
+        AI_SERVER_URL = "http://127.0.0.1:8002/place_rec_ai"
+        ai_response = requests.post(AI_SERVER_URL, json=ai_input_data, timeout=5)
+
+        ai_result = ai_response.json()
+        places = ai_result["result"][:3]
+        ####################################
+        # output = {
+        #    result: [
+        #        route1_dataframe,
+        #        route2_dataframe,
+        #        ,,,]
+        #    }
+        ####################################
+        # print("*" * 30, "성공", "*" * 30)
+        print(places)  # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        # print("*" * 30, "성공", "*" * 30)
+        return places
+
 
 
 class RouteConfirmAPIView(APIView):
@@ -544,7 +621,6 @@ class RouteConfirmAPIView(APIView):
             route_day = RouteDay.objects.create(route=route, day=day_data["day"])
             # 생성된 일차 정보의 장소를 순회하며 일차와 장소를 매핑
             for place_data in day_data["places"]:
-                print(place_data.get("photo_url"))
                 RoutePlace.objects.create(
                     route_day=route_day,
                     order=place_data["order"],
@@ -653,7 +729,6 @@ class RandomRoutePlaceAPIView(APIView):
             .order_by("?")
             .first()
         )
-        print(random_place)
         # 사진 있는 장소가 하나도 없을 경우 처리
         if not random_place:
             return Response({"photo_url": None})

@@ -13,6 +13,8 @@ urlpatterns = [
     # 특정 장소 수정/삭제
     path("places/<int:place_pk>/", views.RoutePlaceDetailAPIView.as_view()),
     # 추천 장소 반환
+    path("recommend/places/", views.PlaceRecommendAPIView.as_view()),
+    # 추천 루트 반환
     path("recommend/", views.RouteRecommendAPIView.as_view()),
     # 추천/편집 결과 확정
     path("confirm/", views.RouteConfirmAPIView.as_view()),

@@ -133,7 +133,7 @@ def recommend_for_new_jeju_user(new_user: dict, topn: int = 20):
 
     result = result.dropna(subset=required_cols, how="any").reset_index(drop=True)
 
-    json_data = result.to_dict(orient="list")
+    json_data = result.to_dict(orient="records")
     json_data = replace_nan(json_data)
     if not json_data:
         print("추천 장소가 존재하지 않습니다")

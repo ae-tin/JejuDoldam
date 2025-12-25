@@ -128,6 +128,56 @@
           </div>
         </section>
 
+        <hr class="divider fade-element delay-200" />
+
+        <section class="recommend-section fade-element delay-200">
+          <div class="section-header">
+            <h3>🎈 이런 여행지는 어때요!?</h3>
+          </div>
+
+          <ul class="place-list">
+            <li
+              v-for="p in recommendedPlaces"
+              :key="p.id"
+              class="place-list-item"
+              @click="openPlace(p.PLACE_URL)"
+            >
+              <span class="route-title">{{ p.VISIT_AREA_NM }}</span>
+              <span class="place-arrow">›</span>
+            </li>
+          </ul>
+        </section>
+
+
+        <!-- <section class="recommend-section fade-element delay-200">
+          <div class="section-header">
+            <h3>이런 여행지는 어때요?</h3>
+          </div>
+
+          <div class="route-grid">
+            <div 
+              v-for="(p, idx) in recommendedPlaces" 
+              :key="p.id" 
+              class="route-card"
+              @click="selectRecommendedRoute(idx)"
+            >
+            
+              <div
+                class="route-card-img"
+                :class="{ 'recommend-gradient': !p.photo_url }"
+                :style="p.photo_url ? bgStyle(p.photo_url) : {}"
+              >
+                <span v-if="p.is_hot" class="route-tag hot">HOT 🔥</span>
+                <span v-else class="route-tag recommend">AI Pick</span>
+              </div>
+              
+              <div class="route-card-body">
+                <h4 class="route-title">{{ p.VISIT_AREA_NM }}</h4>
+                
+              </div>
+            </div>
+          </div>
+        </section> -->
       </div>
     </div>
   </div>
@@ -149,6 +199,7 @@ const recentRoutes = computed(() => routes.value.slice(0, 3))
 const loading = ref(false)
 const error = ref('')
 const recommendedRoutes = ref([])
+const recommendedPlaces = ref([])
 
 let observer = null
 
@@ -156,6 +207,12 @@ let observer = null
 const detailRoutes = (routeId) => {
   router.push({ name: "route-detail", params: { routeId: routeId } })
 }
+
+const openPlace = (url) => {
+  if (!url) return
+  window.open(url, "_blank")
+}
+
 
 // ✅ [수정됨] 추천 루트 클릭 시 전체 리스트와 선택된 인덱스를 넘깁니다.
 const selectRecommendedRoute = (index) => {
@@ -177,6 +234,16 @@ async function fetchRecommendedRoutes() {
   } catch (e) {
     console.error('추천 루트 로딩 실패', e)
     recommendedRoutes.value = []
+  }
+}
+
+async function fetchRecommendedPlaces() {
+  try {
+    const { data } = await api.get('/routes/recommend/places/')
+    recommendedPlaces.value = data || []
+  } catch (e) {
+    console.error('추천 장소 로딩 실패', e)
+    recommendedPlaces.value = []
   }
 }
 
@@ -229,6 +296,7 @@ onMounted(async () => {
   }
 
   fetchRecommendedRoutes()
+  fetchRecommendedPlaces()
 })
 
 onUnmounted(() => {
@@ -350,4 +418,45 @@ onUnmounted(() => {
 .route-tag.hot { background-color: #ff5252; }
 .route-tag.recommend { background-color: #764ba2; }
 .route-card:hover { transform: translateY(-8px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+
+
+
+.place-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.place-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  /* transition: background 0.15s; */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.place-list-item:last-child {
+  border-bottom: none;
+}
+
+.place-list-item:hover {
+  background: #f5fdfa;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.route-title { font-size: 0.95rem; font-weight: bold; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.place-arrow {
+  font-size: 1.2rem;
+  color: #2cb398;
+}
+
 </style>
