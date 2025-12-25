@@ -25,6 +25,7 @@
 - 김종민 [Backend/Frontend]
   
 ---
+
 ## 🛒 기술 스택
 
 ### Backend
@@ -43,6 +44,7 @@
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white) ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 ---
+
 ## 🔧 개발 환경
 
 ### Backend
@@ -57,7 +59,9 @@
 ### AI
 - python 3.11 for route recommend system
 - python 3.9 for place recommend system
+
 ---
+
 ## 📂 프로젝트 구조 (Project Structure)
 ### 🤖 AI: Recommendation Engines (FastAPI)
 사용자의 성향을 분석하여 최적의 장소와 경로를 제안하는 독립 서버입니다.
@@ -185,12 +189,15 @@ Response Example:
 }
 ```
 `is_setting`: 해당 유저의 추가 정보(성별, 연령대 등 AI 추천에 필요한 필수 데이터)가 이미 등록되어 있는지 여부를 나타냅니다. false일 경우 프로필 설정 페이지로 리다이렉트가 필요합니다.
+
 ---
+
 ## 🖨 ERD
 
-
 <img width="2752" height="1536" alt="Gemini_Generated_Image_9zrzli9zrzli9zrz" src="https://github.com/user-attachments/assets/69fbeaaa-921f-4370-972e-4a221464a775" />
+
 ---
+
 ## 프로젝트 실행 순서
 
 ### 사전 준비 사항
@@ -236,7 +243,9 @@ Response Example:
 ### 접속
 - frontend server 터미널의 접속 경로 접속
  - default -> `http://localhost:5173/` 
+
 ---
+
 ## 🔈 기능 시연 상세
 - 로그인 하지 않은 초기 랜딩 페이지
 <img width="2559" height="1274" alt="image" src="https://github.com/user-attachments/assets/b2055de9-4f32-4335-bc29-a789c971370e" />
@@ -258,7 +267,9 @@ Response Example:
 
 - 커뮤니티(게시글 상세 조회)
 <img width="2559" height="1283" alt="image" src="https://github.com/user-attachments/assets/6995e51e-d95f-4095-8fab-7875e95a287e" />
+
 ---
+
 ## 🖱 협업 준수 사항
 
 - [Code Convention](https://github.com/ae-tin/JejuDoldam/wiki/Code-Convention)
