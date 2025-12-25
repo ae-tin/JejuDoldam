@@ -511,7 +511,7 @@ class PlaceRecommendAPIView(APIView):
         return Response(places_random_data)
 
     def get(self, request):
-        print('here')
+        
         # ai 장소 추천 생성 전처리 및 호출
         place_ai_input_random_data = create_input_data_no_info(rec="place")
         places = self.create_ai_places(place_ai_input_random_data)
@@ -543,7 +543,7 @@ class PlaceRecommendAPIView(APIView):
         #    }
         ####################################
         # print("*" * 30, "성공", "*" * 30)
-        print(places)  # 여러개 추천 중 첫번째만 출력(성공 확인용)
+        # print(places)  # 여러개 추천 중 첫번째만 출력(성공 확인용)
         # print("*" * 30, "성공", "*" * 30)
         return places
 
