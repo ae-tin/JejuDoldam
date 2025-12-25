@@ -78,7 +78,7 @@ def build_new_user_features(new_user: dict) -> csr_matrix:
 
 
 @trace_error
-def recommend_for_new_jeju_user(new_user: dict, topn: int = 5):
+def recommend_for_new_jeju_user(new_user: dict, topn: int = 20):
     # 1) 새 유저 feature 벡터 (user_id=0 가정)
     new_user_features = build_new_user_features(new_user)
 
@@ -117,10 +117,23 @@ def recommend_for_new_jeju_user(new_user: dict, topn: int = 5):
             "LOTNO_ADDR",
             "X_COORD",
             "Y_COORD",
+            "PLACE_URL",
+            "PLACE_CAT",
         ]
     ]
     result = result.where(pd.notna(result), None)
-    json_data = result.to_dict(orient="list")
+    photo_urls = result["PLACE_URL"].to_list()
+    photo_urls = [None if isinstance(x, float) else x for x in photo_urls]
+    photo_cats = result["PLACE_CAT"].to_list()
+    photo_cats = [None if isinstance(x, float) else x for x in photo_cats]
+    result["PLACE_URL"] = photo_urls
+    result["PLACE_CAT"] = photo_cats
+
+    required_cols = ["PLACE_URL", "PLACE_CAT"]
+
+    result = result.dropna(subset=required_cols, how="any").reset_index(drop=True)
+
+    json_data = result.to_dict(orient="records")
     json_data = replace_nan(json_data)
     if not json_data:
         print("추천 장소가 존재하지 않습니다")

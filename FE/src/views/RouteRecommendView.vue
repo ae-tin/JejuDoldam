@@ -53,6 +53,8 @@
           </div>
         </div>
 
+        
+
         <div class="place-list-container">
           <div class="search-section">
             <KakaoPlaceSearch @select="addPlaceToSelectedDay" />
@@ -102,6 +104,33 @@
             <p>방문할 장소를 검색해서 추가해보세요.</p>
           </div>
         </div>
+
+        <div class="ai-pick-panel">
+          <h4 class="name ai-pick-title panel-top-tabs">📍 AI 픽 추천 여행지</h4>
+          <p v-if="dayPlaces.length" class="helper-text">
+            * 장소를 검색하고 추가해보세요.
+          </p>
+          <div v-if="aiPickLoading" class="ai-pick-loading">
+            불러오는 중...
+          </div>
+
+          <ul v-else class="ai-pick-list">
+            <li
+              v-for="p in aiPickPlaces"
+              :key="p.id"
+              class="ai-pick-item"
+            >
+              <span class="name-ai">
+                {{ p.VISIT_AREA_NM }}
+                <a v-if="p.PLACE_URL" :href="p.PLACE_URL" target="_blank" @click.stop class="map-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
+              </span>
+              
+            </li>
+          </ul>
+        </div>
+
       </aside>
 
       <div class="resizer" @mousedown="startResize"></div>
@@ -165,6 +194,8 @@ const selectedRouteIndex = ref(0)
 const selectedDay = ref(1)
 
 const selectedRoute = computed(() => results.value[selectedRouteIndex.value] || null)
+const aiPickPlaces = ref([])
+const aiPickLoading = ref(false)
 
 const recommendPayload = computed(() => {
   const q = route.query
@@ -211,6 +242,7 @@ const canSave = computed(() => {
 function selectRoute(idx) {
   selectedRouteIndex.value = idx
   selectedDay.value = dayList.value[0] ?? 1
+  fetchAiPickPlaces() // ⬅️ 추천 루트 변경 시만 호출
 }
 
 function toEditableRoute(r) {
@@ -308,6 +340,7 @@ async function fetchRecommendations() {
       // 사용자가 클릭했던 루트(인덱스)를 기본 선택으로 설정
       selectedRouteIndex.value = state.initialIndex || 0
       selectedDay.value = 1
+      fetchAiPickPlaces() // ✅ 여기 추가
       return // API 호출 없이 바로 종료 (데이터 재활용)
     } catch (e) {
       console.error("전달받은 데이터 처리 중 오류:", e)
@@ -332,6 +365,8 @@ async function fetchRecommendations() {
     results.value = (data || []).map((r) => toEditableRoute(r))
     selectedRouteIndex.value = 0
     selectedDay.value = 1
+
+    fetchAiPickPlaces()   // ✅ 여기 추가 (중요)
   } catch (e) {
     console.error(e)
     const serverMsg = e?.response?.data?.detail || e?.response?.data?.message || (typeof e?.response?.data === 'string' ? e.response.data : null)
@@ -379,6 +414,24 @@ function mapRouteToConfirmPayload(routeObj) {
 const selectedPlaceUid = ref(null)
 function togglePlacePhoto(place) {
   selectedPlaceUid.value = selectedPlaceUid.value === place._uid ? null : place._uid
+}
+
+async function fetchAiPickPlaces() {
+  aiPickLoading.value = true
+  try {
+    const { data } = await api.get('/routes/recommend/places/', {
+      params: {
+        route_index: selectedRouteIndex.value, 
+        // 필요하면 route_id: selectedRoute.value.id
+      }
+    })
+    aiPickPlaces.value = data || []
+  } catch (e) {
+    console.error('AI 픽 로딩 실패', e)
+    aiPickPlaces.value = []
+  } finally {
+    aiPickLoading.value = false
+  }
 }
 
 onMounted(fetchRecommendations)
@@ -542,7 +595,7 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
 
 /* 장소 리스트 */
 .place-list-container {
-  padding: 0 24px 60px; /* 하단에 여유 공간 */
+  padding: 0 24px 12px; /* 하단에 여유 공간 */
   flex: 1;
 }
 
@@ -598,6 +651,13 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
   display: block;
   font-size: 1rem;
   font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+.name-ai {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #333;
   margin-bottom: 4px;
 }
@@ -724,4 +784,102 @@ watch(() => route.query, () => fetchRecommendations(), { deep: true })
   .right-map { height: 50vh; }
   .resizer { display: none; }
 }
+
+/* AI 픽 섹션 전체를 안쪽으로 넣기 */
+.ai-pick-panel {
+  margin-top: 0px;
+  padding: 18px 24px 12px;         /* ✅ 좌우 여백 크게 */
+  /* border-top: 1px dashed #eee; */
+}
+
+/* 리스트 자체도 약간 들여쓰기/정렬 */
+.ai-pick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 각 항목을 “리스트 카드”처럼 */
+.ai-pick-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 12px 14px;         /* ✅ 아이템 내부 여백 */
+  margin: 6px 0;              /* ✅ 아이템 간 간격 */
+
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+  background: #fff;
+
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.ai-pick-item:hover {
+  background: #f5fdfa;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+
+
+
+
+/* 
+.ai-pick-panel {
+  margin-top: 2px;
+  padding-top: 1px;
+  border-top: 1px dashed #eee;
+} */
+
+.ai-pick-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.ai-pick-loading {
+  font-size: 0.85rem;
+  color: #aaa;
+  padding: 8px 0;
+}
+/* 
+.ai-pick-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ai-pick-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.ai-pick-item:hover {
+  background: #f5fdfa;
+  transform: translateY(-1px);
+} */
+
+.ai-pick-name {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.ai-pick-arrow {
+  color: #2cb398;
+  font-size: 1.1rem;
+}
+.ai-pick-title {
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+
 </style>
