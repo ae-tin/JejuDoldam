@@ -197,6 +197,48 @@ Response Example:
 ---
 - [코드 컨벤션](https://github.com/ae-tin/JejuDoldam/wiki/Code-Convention)
 
+## 프로젝트 실행 순서
+
+### 사전 준비 사항
+- Python 3.11 설치
+- Python 3.9 설치
+- Window 11
+
+### .env 준비
+- `JejuDoldam/AI/`, `JejuDoldam/BE/`, `JejuDoldam/FE/` 경로의 .env.example 대신 .env 준비
+
+### 터미널 4개 준비 (루트: 프로젝트 폴더)
+- ai_route_recommend server
+- ai_place_recommend server
+- backend server
+- frontend server
+
+#### ai_route_recommend server 터미널
+- `JejuDoldam/AI/route_recommend/` 경로에서 가상환경 생성 `py -3.11 -m venv venv`
+- 가상환경 활성화 `source venv/Scripts/activate`
+- requirements.txt 설치 `pip install -r cluster_requirements.txt`
+- 서버 켜기 `uvicorn fastapi_route:app --port 8001 --reload`
+
+#### ai_place_recommend server 터미널
+- `JejuDoldam/AI/place_recommend/` 경로에서 가상환경 생성 `py -3.9 -m venv venv`
+- 가상환경 활성화 `source venv/Scripts/activate`
+- requirements.txt 설치 `pip install -r lightfm_requirements.txt`
+- 서버 켜기 `uvicorn fastapi_place:app --port 8002 --reload`
+
+#### backend server 터미널
+- `JejuDoldam/BE/` 경로에서 가상환경 생성 `py -3.11 -m venv venv`
+- 가상환경 활성화 `source venv/Scripts/activate`
+- requirements.txt 설치 `pip install -r requirements.txt`
+- migrate `python manage.py migrate`
+- load fixture data `python manage.py loaddata accounts.json posts.json routes.json`
+- 서버 켜기 `python manage.py runserver`
+
+#### frontend server 터미널
+- `JejuDoldam/FE/` 경로에서 가상환경 생성 `py -3.11 -m venv venv`
+- 가상환경 활성화 `source venv/Scripts/activate`
+- `npm install`
+- 서버 켜기 `npm run dev`
+
 ## 🔈 기능 시연 상세
 - 로그인 하지 않은 초기 랜딩 페이지
 <img width="2559" height="1274" alt="image" src="https://github.com/user-attachments/assets/b2055de9-4f32-4335-bc29-a789c971370e" />
