@@ -239,6 +239,10 @@ Response Example:
 - `npm install`
 - 서버 켜기 `npm run dev`
 
+### 접속
+- frontend server 터미널의 접속 경로 접속
+ - default -> `http://localhost:5173/` 
+
 ## 🔈 기능 시연 상세
 - 로그인 하지 않은 초기 랜딩 페이지
 <img width="2559" height="1274" alt="image" src="https://github.com/user-attachments/assets/b2055de9-4f32-4335-bc29-a789c971370e" />
