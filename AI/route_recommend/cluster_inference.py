@@ -4,9 +4,9 @@ from pathlib import Path
 from joblib import load
 from utils import trace_error, replace_nan
 
-BASE_DIR = Path().resolve().parent.parent
-save_path = BASE_DIR / "AI" / "route_recommend" / "model"
-gps_data_path = BASE_DIR / "AI" / "route_recommend" / "data_local"
+BASE_DIR = Path(__file__).resolve().parent
+save_path = BASE_DIR / "model"
+gps_data_path = BASE_DIR / "data_local"
 # photo url이 존재하는 user만 따로 담은 csv
 df_raw = pd.read_csv(save_path / "rating_user_info_all_cluster_photo.csv")
 df_raw = df_raw.loc[:, ~df_raw.columns.str.startswith("Unnamed")]

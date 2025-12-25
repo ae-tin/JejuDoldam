@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - be
+      - ai_route
+      - ai_place
+      - fe
+    restart: always
+
+  fe:
+    build:
+      context: ./FE
+    container_name: fe
+    restart: always
+
+  be:
+    build:
+      context: ./BE
+    container_name: be
+    env_file:
+      - ./BE/.env
+    expose:
+      - "8000"
+    restart: always
+
+  ai_route:
+    build:
+      context: ./AI/route_recommend
+    container_name: ai_route
+    env_file:
+      - ./AI/.env
+    expose:
+      - "8001"
+    restart: always
+
+  ai_place:
+    build:
+      context: ./AI/place_recommend
+    container_name: ai_place
+    env_file:
+      - ./AI/.env
+    expose:
+      - "8002"
+    restart: always
+

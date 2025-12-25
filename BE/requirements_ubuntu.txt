@@ -1,8 +1,16 @@
-# requirements/backend_linux.txt
+# --- Django ---
 Django==5.2.8
 djangorestframework==3.16.1
-djangorestframework_simplejwt==5.5.1
 django-cors-headers==4.9.0
 django-environ==0.12.0
-gunicorn
-requests
+djangorestframework_simplejwt==5.5.1
+
+# --- WSGI ---
+gunicorn==21.2.0
+
+# --- Utils ---
+python-dotenv==1.2.1
+requests==2.32.5
+PyJWT==2.10.1
+sqlparse==0.5.3
+
