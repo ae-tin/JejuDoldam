@@ -4,7 +4,7 @@
 ### 📓 프로젝트 개요
 
 - 설명 : AI 기반 제주도 여행 경로추천 서비스
-- 기간 : 2025.12.08(월) ~ 2025.12.24(수)
+- 기간 : 2025.12.08(월) ~ 2025.12.25(목)
 
 ### 🦝 서비스 특징
 
@@ -20,7 +20,7 @@
 
 ### 🦾 팀 소개
 
-- 강태인 [AI/Data/AI_server]
+- 강태인 [AI/Data/Deployment]
   
 - 김종민 [Backend/Frontend]
   
@@ -29,42 +29,49 @@
 
 ---
 ### Backend
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)  ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)  ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray)  ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)  ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)  ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)  ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)  ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray)  ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)  ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ### Frontend
 ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)  ![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)  ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) 
 ### AI
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-나머지는 추가 예정
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi) ![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white) ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
+
 ### DevOps
 ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)  ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
 ### Tools
 ![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)  ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)  ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)  ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)
 
+### Deployment
+![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white) ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+
 ## 🔧 개발 환경
 
 ---
 
-Backend
+### Backend
 
 - Django 5.2.8
 - DRF 3.16.1
 
-Frontend
+### Frontend
 
 - Vue.js 3.5.26
 
+### AI
+- python 3.11 for route recommend system
+- python 3.9 for place recommend system
+  
 ## 📂 프로젝트 구조 (Project Structure)
 ### 🤖 AI: Recommendation Engines (FastAPI)
 사용자의 성향을 분석하여 최적의 장소와 경로를 제안하는 독립 서버입니다.
 
-place_recommend/: 사용자의 인구통계학적 특성 및 여행 스타일을 바탕으로 한 장소 추천 서버입니다.
+place_recommend/: 기존 여행자들의 여행 장소 평가 데이터를 학습하여 서비스 사용자의 인구통계학적 특성을 바탕으로 한 장소 추천 AI 서버입니다.
 
-route_recommend/: 유사 성향 사용자의 이동 데이터를 분석하여 여행 경로를 생성하는 서버입니다.
+route_recommend/: 서비스 사용자의 성향을 파악하고 이와 유사한 여행자의 GPS 이동 데이터를 분석하여 여행 경로를 생성하는 추천 AI 서버입니다.
 
 ### ⚙️ BE: Backend (Django REST Framework)
-데이터 관리 및 AI 서버와의 통신을 담당하는 핵심 API 서버입니다.
+서비스 데이터 관리 및 AI 서버와의 통신을 담당하는 핵심 API 서버입니다.
 
-accounts/: JWT 기반의 회원 인증 및 프로필 정보를 관리합니다.
+accounts/: JWT, OAuth 기반의 회원 인증 및 프로필 정보를 관리합니다.
 
 routes/: 추천 요청 처리, 경로 편집 및 Route > Day > Place 구조의 데이터를 일괄 저장합니다.
 
@@ -76,6 +83,7 @@ posts/: 사용자 간 여행 루트를 공유하고 소통할 수 있는 커뮤�
 src/api/: Axios 인터셉터를 통해 JWT 토큰 만료 시 자동으로 Refresh를 요청하는 클라이언트를 포함합니다.
 
 src/stores/: Pinia를 사용하여 로그인 상태 및 현재 편집 중인 여행 경로 데이터를 관리합니다.
+
 ### 🔌핵심 API 명세
 1. 로그인 (JWT 발급)
 사용자 인증을 통해 토큰을 발급받습니다.
@@ -187,7 +195,7 @@ Response Example:
 
 ### 🖱 코드 컨벤션
 ---
-https://github.com/ae-tin/JejuDoldam/wiki/Code-Convention
+- [코드 컨벤션](https://github.com/ae-tin/JejuDoldam/wiki/Code-Convention)
 
 ## 🔈 기능 시연 상세
 - 로그인 하지 않은 초기 랜딩 페이지
